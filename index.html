@@ -3565,19 +3565,49 @@ async function doTerritorySearch() {
 async function callProspecting(companyName) {
   const apiKey = localStorage.getItem('ast_api_key');
 
-  const prompt = `Tu es un expert en intelligence commerciale B2B. Utilise la recherche web pour trouver des informations précises et réelles sur l'entreprise "${companyName}".
+  const prompt = `Tu es un expert en intelligence commerciale B2B spécialisé dans la recherche de contacts acheteurs et décideurs.
 
-Cherche : dirigeants, contacts, numéro de téléphone, emails, site web, secteur, taille.
+Utilise la recherche web pour trouver des informations VÉRIFIÉES et CERTAINES sur l'entreprise "${companyName}".
 
-Réponds UNIQUEMENT avec un objet JSON valide, sans markdown:
+PRIORITÉS DE RECHERCHE (dans cet ordre) :
+1. Cherche le site officiel de l'entreprise pour trouver : numéro de standard, email de contact, adresse
+2. Cherche sur LinkedIn les profils de : Directeur Achats, Responsable Achats, Acheteur, Chef de produit, Directeur Marketing, Directeur Général, Responsable Approvisionnements
+3. Cherche des articles de presse, annuaires professionnels (Kompass, Societe.com, LinkedIn) pour confirmer les noms
+
+RÈGLES STRICTES :
+- Ne mets que des informations dont tu es CERTAIN (trouvées sur le web)
+- Si tu n'es pas sûr d'un email ou d'un téléphone : mets null (vaut mieux null que faux)
+- Pour le téléphone : cherche le numéro de standard/accueil sur le site officiel
+- Pour les emails : cherche contact@, commercial@, achats@ ou emails trouvés sur le site
+- Ne jamais inventer un email ou un téléphone
+
+Réponds UNIQUEMENT avec un objet JSON valide, sans markdown :
 {
-  "company": {"name": "...", "domain": "...", "industry": "...", "employees": "...", "location": "...", "description": "..."},
+  "company": {
+    "name": "Nom exact",
+    "domain": "site-officiel.fr",
+    "industry": "Secteur précis",
+    "employees": "Taille réelle",
+    "location": "Ville, Région (format court, sans numéro de rue ni code postal)",
+    "description": "Activité réelle en 1 phrase",
+    "phone": "Numéro standard si trouvé sur le site sinon null",
+    "email": "Email général si trouvé sinon null"
+  },
   "contacts": [
-    {"name": "Prénom Nom RÉEL", "title": "Poste exact", "department": "...", "email": "... ou null", "phone": "... ou null", "linkedin": "URL ou null"}
+    {
+      "name": "Prénom Nom réel vérifié",
+      "title": "Titre exact",
+      "department": "Achats ou Direction ou Marketing",
+      "email": "email vérifié ou null",
+      "phone": "ligne directe vérifiée ou null",
+      "linkedin": "URL LinkedIn vérifiée ou null",
+      "source": "linkedin ou site-web ou presse"
+    }
   ]
 }
 
-Fournis 5 à 10 contacts réels avec leurs vrais noms. Champs inconnus = null.`;
+Priorité absolue aux profils ACHATS, APPROVISIONNEMENTS, QUALITÉ, MARKETING puis DIRECTION.
+Fournis 4 à 8 contacts. Mets null sur tout champ incertain.`;
 
   let messages = [{ role: 'user', content: prompt }];
   let attempts = 0;
@@ -3644,6 +3674,24 @@ Fournis 5 à 10 contacts réels avec leurs vrais noms. Champs inconnus = null.`;
 }
 
 
+// Simplify address to "Ville, Région" for reliable geocoding
+function simplifyAddress(raw) {
+  if (!raw) return '';
+  // Remove street numbers, cedex, BP, zip codes starting with digit
+  let addr = raw
+    .replace(/\b\d{1,5}[,\s]+/g, '')       // street numbers
+    .replace(/\bBP\s*\d+\b/gi, '')          // BP xxxx
+    .replace(/\bCedex\s*\d*/gi, '')         // Cedex
+    .replace(/\b\d{5}\b/g, '')              // zip codes
+    .replace(/,\s*,/g, ',')                 // double commas
+    .replace(/^\s*,\s*/g, '')               // leading comma
+    .trim();
+  // Keep only the last 2 meaningful parts (city + country/region)
+  const parts = addr.split(',').map(s => s.trim()).filter(Boolean);
+  if (parts.length > 2) return parts.slice(-2).join(', ');
+  return parts.join(', ') || raw;
+}
+
 function addSearchResultToCRM(payload) {
   const co = payload.company || {};
   const p  = payload.contact || {};
@@ -3660,18 +3708,26 @@ function addSearchResultToCRM(payload) {
     return;
   }
 
+  // Fill missing contact coords with company-level fallbacks
+  const contactEmail = p.email || co.email || '';
+  const contactPhone = p.phone || co.phone || '';
+
+  // Simplify address: keep only "Ville, Région" — strip street numbers and long parts
+  const rawAddress = co.location || '';
+  const simpleAddress = simplifyAddress(rawAddress);
+
   const newEntry = {
     id:           Date.now(),
     commercial:   me,
     company:      co.name        || '',
     sector:       co.industry    || '',
     size:         co.employees   || '',
-    address:      co.location    || '',
+    address:      simpleAddress,
     website:      co.domain      || '',
     contactName:  p.name         || '',
     contactTitle: p.title        || '',
-    email:        p.email        || '',
-    phone:        p.phone        || '',
+    email:        contactEmail,
+    phone:        contactPhone,
     linkedin:     p.linkedin     || '',
     status:       'prospect',
     notes:        co.description || '',
@@ -3743,13 +3799,17 @@ function renderResults(data) {
     <div class="company-avatar-lg">${coInit}</div>
     <div class="company-info">
       <div class="company-name-lg">${co.name || '—'}</div>
-      ${co.domain ? `<div class="company-domain">${co.domain}</div>` : ''}
+      ${co.domain ? `<div class="company-domain">🌐 ${co.domain}</div>` : ''}
       ${co.description ? `<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:6px;line-height:1.5">${co.description}</div>` : ''}
-      <div class="company-tags">
-        ${co.industry ? `<span class="ctag">🏭 ${co.industry}</span>` : ''}
+      <div class="company-tags" style="margin-top:8px">
+        ${co.industry  ? `<span class="ctag">🏭 ${co.industry}</span>`  : ''}
         ${co.employees ? `<span class="ctag">👥 ${co.employees}</span>` : ''}
-        ${co.location ? `<span class="ctag">📍 ${co.location}</span>` : ''}
+        ${co.location  ? `<span class="ctag">📍 ${co.location}</span>`  : ''}
       </div>
+      ${(co.phone || co.email) ? `<div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
+        ${co.phone ? `<a href="tel:${co.phone}" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:5px 10px;color:#fff;text-decoration:none;font-size:12px;font-weight:600">📞 ${co.phone}</a>` : ''}
+        ${co.email ? `<a href="mailto:${co.email}" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:5px 10px;color:#fff;text-decoration:none;font-size:12px;font-weight:600">✉️ ${co.email}</a>` : ''}
+      </div>` : ''}
     </div>
     <div class="hero-badge">${contacts.length} contact${contacts.length > 1 ? 's' : ''}</div>
   </div>`;
@@ -3793,6 +3853,7 @@ function renderResults(data) {
             ${p.phone ? `<div class="detail-row"><span class="detail-icon">📞</span><span>${p.phone}</span></div>` : ''}
             ${p.linkedin ? `<div class="detail-row"><span class="detail-icon">🔗</span><a href="${p.linkedin.startsWith('http')?p.linkedin:'https://'+p.linkedin}" target="_blank">Voir LinkedIn</a></div>` : ''}
             ${!p.email && !p.phone && !p.linkedin ? `<div class="no-data">Coordonnées non disponibles</div>` : ''}
+            ${p.source ? `<div style="margin-top:6px"><span style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;background:#f1f5f9;color:#64748b;border-radius:4px;padding:2px 6px">✓ ${p.source}</span></div>` : ''}
           </div>
           <button class="card-crm-btn" onclick='addSearchResultToCRM(${JSON.stringify({
             company: co, contact: p
@@ -3862,23 +3923,50 @@ async function callTerritoryProspecting(region, sectors, size) {
     ? `UNIQUEMENT dans la région "${region}" (départements de cette région uniquement, pas ailleurs en France)`
     : 'sur toute la France';
 
-  const prompt = `Tu es un expert en intelligence commerciale B2B. Utilise la recherche web pour trouver des entreprises françaises réelles.
+  const prompt = `Tu es un expert en intelligence commerciale B2B spécialisé dans la recherche de contacts acheteurs.
+
 CONTRAINTE GÉOGRAPHIQUE STRICTE : Cherche ${regionInstr}.
 Secteurs: ${sectorList} | Taille: ${sizeStr}
 
-Réponds UNIQUEMENT en JSON valide, sans markdown:
+MÉTHODE :
+1. Pour chaque entreprise trouvée, visite son site officiel pour récupérer : numéro de standard, email de contact
+2. Cherche sur LinkedIn, Kompass, Societe.com les contacts avec titres : Directeur Achats, Responsable Achats, Acheteur, Directeur Marketing, DG
+3. Ne mets que des informations VÉRIFIÉES — null si incertain
+
+RÈGLES STRICTES :
+- Chaque entreprise DOIT être réellement localisée dans "${regionStr}"
+- Ne jamais inventer un email ou un téléphone
+- Le numéro de téléphone = standard de l'entreprise trouvé sur son site
+- Priorité aux contacts ACHATS, puis MARKETING, puis DIRECTION
+
+Réponds UNIQUEMENT en JSON valide, sans markdown :
 {
   "search": {"region": "${regionStr}", "sectors": ${JSON.stringify(sectors)}, "size": "${sizeStr}"},
   "companies": [
     {
-      "name": "Nom réel", "domain": "site.fr", "industry": "Secteur", "employees": "...", "location": "Ville (région ${regionStr}), France", "description": "...",
+      "name": "Nom réel vérifié",
+      "domain": "site-officiel.fr",
+      "industry": "Secteur précis",
+      "employees": "Taille réelle",
+      "location": "Ville, ${regionStr} (format court ex: Strasbourg, Grand Est)",
+      "description": "Activité en 1 phrase",
+      "phone": "Standard trouvé sur site ou null",
+      "email": "Email contact trouvé ou null",
       "contacts": [
-        {"name": "Prénom Nom RÉEL", "title": "Poste", "department": "...", "email": null, "phone": null, "linkedin": null}
+        {
+          "name": "Prénom Nom vérifié",
+          "title": "Titre exact",
+          "department": "Achats/Marketing/Direction",
+          "email": "email vérifié ou null",
+          "phone": "null",
+          "linkedin": "URL vérifiée ou null",
+          "source": "linkedin/site/kompass"
+        }
       ]
     }
   ]
 }
-Trouve 4 à 5 entreprises BASÉES DANS LA RÉGION "${regionStr}" avec 3 contacts chacune. Vérifie que chaque entreprise est bien localisée dans cette région. Champs inconnus = null.`;
+Trouve 4 entreprises réelles dans "${regionStr}" avec 3 contacts ACHATS chacune. JSON complet et bien fermé.`;
 
   let messages = [{ role: 'user', content: prompt }];
   let attempts = 0;
