@@ -851,6 +851,14 @@ body {
 .role-chip:active { transform: scale(0.96); }
 .role-chip.selected { border-color: var(--accent); background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(45,126,247,0.28); }
 
+/* ── API usage gauge (company / territory search) ── */
+.api-gauge { margin-bottom: 18px; max-width: 420px; }
+.api-gauge-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.api-gauge-lbl { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
+.api-gauge-pct { font-size: 12px; font-weight: 700; color: var(--green); font-variant-numeric: tabular-nums; }
+.api-gauge-track { height: 7px; border-radius: 99px; background: var(--border); overflow: hidden; }
+.api-gauge-fill { height: 100%; width: 100%; border-radius: 99px; background: var(--green); transition: width var(--dur-slow) var(--ease-out), background var(--dur) var(--ease); }
+
 .territory-footer {
   display: flex;
   align-items: center;
@@ -2262,6 +2270,14 @@ body {
         Obtenez votre clé sur <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>
       </div>
 
+      <div class="field-label" style="margin-top:12px">💶 Budget IA mensuel (€)</div>
+      <div class="key-input-row">
+        <input class="key-input" type="number" id="api-budget-input" placeholder="350" min="1" step="10" style="font-family:'Inter',sans-serif" />
+      </div>
+      <div class="key-hint">
+        Définit le 100 % de la jauge « crédit IA restant » (partagée par l'équipe, remise à zéro chaque mois).
+      </div>
+
       <div class="field-label" style="margin-top:12px">🔥 Configuration Firebase</div>
       <div class="key-input-row">
         <textarea class="key-input" id="sync-key-input" placeholder='{&quot;apiKey&quot;:&quot;...&quot;,&quot;projectId&quot;:&quot;...&quot;}' autocomplete="off"
@@ -2498,6 +2514,13 @@ body {
       <div class="search-section">
         <h1 class="search-heading">Trouvez les <span>décideurs</span> de vos cibles</h1>
         <p class="search-desc">Entrez le nom d'une entreprise pour obtenir ses contacts clés avec leurs coordonnées.</p>
+        <div class="api-gauge" title="Crédit IA mensuel de l'équipe — part restante ce mois-ci">
+          <div class="api-gauge-head">
+            <span class="api-gauge-lbl">⚡ Crédit IA restant ce mois (équipe)</span>
+            <span class="api-gauge-pct">100%</span>
+          </div>
+          <div class="api-gauge-track"><div class="api-gauge-fill"></div></div>
+        </div>
         <div class="search-card">
           <div class="search-row">
             <span class="search-icon">🔍</span>
@@ -2549,6 +2572,13 @@ body {
       <div class="search-section">
         <h1 class="search-heading">Prospecter par <span>territoire</span></h1>
         <p class="search-desc">Ciblez une région et un ou plusieurs secteurs pour découvrir les entreprises et leurs décideurs.</p>
+        <div class="api-gauge" title="Crédit IA mensuel de l'équipe — part restante ce mois-ci">
+          <div class="api-gauge-head">
+            <span class="api-gauge-lbl">⚡ Crédit IA restant ce mois (équipe)</span>
+            <span class="api-gauge-pct">100%</span>
+          </div>
+          <div class="api-gauge-track"><div class="api-gauge-fill"></div></div>
+        </div>
 
         <div class="territory-card">
           <!-- Région + taille -->
@@ -3825,6 +3855,7 @@ function showApp() {
   }
   startAutoSync();
   setTimeout(updateUnreadBadge, 500);
+  renderApiGauge();
 }
 
 function isDirector() { return localStorage.getItem('ast_role') === 'director'; }
@@ -3923,6 +3954,48 @@ function setProgress(step) {
     if (i < step - 1) { el.className = 'prog-step done'; }
     else if (i === step - 1) { el.className = 'prog-step active'; }
     else { el.className = 'prog-step'; }
+  });
+}
+
+// ── API USAGE GAUGE (shared monthly budget) ───────────────────────────
+// Tracks REAL consumption from each API response's usage field, summed across
+// the whole team via Firestore, shown as a % of a monthly budget. No raw € shown.
+const API_PRICING = { inPerTok: 3/1e6, outPerTok: 15/1e6, perWebSearch: 0.01, eurPerUsd: 0.92 };
+function currentMonthKey() { return new Date().toISOString().slice(0,7); } // YYYY-MM
+function getApiUsage() {
+  let u; try { u = JSON.parse(localStorage.getItem('ast_usage') || '{}'); } catch(e) { u = {}; }
+  const m = currentMonthKey();
+  if (u.month !== m) u = { month: m, eur: 0 };   // auto-reset each month
+  return u;
+}
+function getApiBudget() {
+  const b = parseFloat(localStorage.getItem('ast_usage_budget'));
+  return (isFinite(b) && b > 0) ? b : 350;       // default €350 / month
+}
+function trackApiUsage(usage) {
+  if (!usage) return;
+  const inTok  = usage.input_tokens  || 0;
+  const outTok = usage.output_tokens || 0;
+  const web    = (usage.server_tool_use && usage.server_tool_use.web_search_requests) || 0;
+  const usd = inTok*API_PRICING.inPerTok + outTok*API_PRICING.outPerTok + web*API_PRICING.perWebSearch;
+  const eur = usd * API_PRICING.eurPerUsd;
+  if (eur <= 0) return;
+  const u = getApiUsage();
+  u.eur = (u.eur || 0) + eur;
+  localStorage.setItem('ast_usage', JSON.stringify(u));
+  syncPush();            // share with the team (debounced)
+  renderApiGauge();
+}
+function renderApiGauge() {
+  const u = getApiUsage();
+  const budget = getApiBudget();
+  const remPct = Math.max(0, Math.min(100, 100 - (u.eur / budget) * 100));
+  const color = remPct > 50 ? 'var(--green)' : remPct > 20 ? 'var(--amber)' : 'var(--red)';
+  document.querySelectorAll('.api-gauge').forEach(g => {
+    const fill = g.querySelector('.api-gauge-fill');
+    const pct  = g.querySelector('.api-gauge-pct');
+    if (fill) { fill.style.width = remPct.toFixed(1) + '%'; fill.style.background = color; }
+    if (pct)  { pct.textContent = Math.round(remPct) + '%'; pct.style.color = color; }
   });
 }
 
@@ -4075,6 +4148,7 @@ Fournis 6 à 10 contacts réels et vérifiés, en respectant le ciblage demandé
     }
 
     const data = await resp.json();
+    trackApiUsage(data.usage);
     const textBlocks  = (data.content || []).filter(b => b.type === 'text');
     const toolBlocks  = (data.content || []).filter(b => b.type === 'tool_use');
 
@@ -4484,6 +4558,7 @@ Trouve 6 entreprises réelles dans "${regionStr}" avec 4 à 5 contacts vérifié
     }
 
     const data = await resp.json();
+    trackApiUsage(data.usage);
     const textBlocks = (data.content || []).filter(b => b.type === 'text');
     const toolBlocks = (data.content || []).filter(b => b.type === 'tool_use');
 
@@ -5350,6 +5425,7 @@ window.switchTab = function(tab) {
   if (tab === 'outreach') initOutreach();
   if (tab === 'pipeline') initPipeline();
   if (tab === 'messaging') initMessaging();
+  if (tab === 'company' || tab === 'territory') renderApiGauge();
 };
 
 // ─────────────────────────────────────────────────────────────────────
@@ -6493,6 +6569,7 @@ Réponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans texte avant o
     }
 
     const data = await resp.json();
+    trackApiUsage(data.usage);
     const textBlocks = (data.content || []).filter(b => b.type === 'text');
     if (!textBlocks.length) throw new Error('Réponse vide');
 
@@ -7910,6 +7987,7 @@ Réponds UNIQUEMENT en JSON valide:
       body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1500, messages: [{ role: 'user', content: prompt }] })
     });
     const data = await resp.json();
+    trackApiUsage(data.usage);
     const raw = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').replace(/```json|```/g,'').trim();
     const m = raw.match(/\{[\s\S]*\}/);
     if (!m) throw new Error('Format invalide');
@@ -8112,6 +8190,7 @@ Règles:
 
     if (!resp.ok) { const e = await resp.json().catch(()=>({})); throw new Error(e.error?.message || 'API '+resp.status); }
     const data = await resp.json();
+    trackApiUsage(data.usage);
     const raw = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('').replace(/```json|```/g,'').trim();
     const m = raw.match(/\{[\s\S]*\}/);
     if (!m) throw new Error('Format de réponse invalide');
@@ -8700,6 +8779,18 @@ function applyRemoteData(rec) {
   if (rec.fiches !== undefined && rec.fiches !== null) localStorage.setItem('ast_fiches', JSON.stringify(rec.fiches));
   if (Array.isArray(rec.convs))     localStorage.setItem('ast_convs',     JSON.stringify(rec.convs));
   if (rec.lib !== undefined && rec.lib !== null) localStorage.setItem('ast_lib', JSON.stringify(rec.lib));
+  // Shared API usage gauge — monotonic merge within the current month (consumption only grows)
+  if (rec.usage && typeof rec.usage === 'object') {
+    const m = new Date().toISOString().slice(0,7);
+    let local; try { local = JSON.parse(localStorage.getItem('ast_usage') || '{}'); } catch(e) { local = {}; }
+    const localEur  = (local.month === m && typeof local.eur === 'number') ? local.eur : 0;
+    const remoteEur = (rec.usage.month === m && typeof rec.usage.eur === 'number') ? rec.usage.eur : 0;
+    localStorage.setItem('ast_usage', JSON.stringify({ month: m, eur: Math.max(localEur, remoteEur) }));
+  }
+  if (typeof rec.usageBudget === 'number' && rec.usageBudget > 0) {
+    localStorage.setItem('ast_usage_budget', String(rec.usageBudget));
+  }
+  if (typeof renderApiGauge === 'function') renderApiGauge();
 }
 
 // ── REALTIME LISTENER ─────────────────────────────────────────────
@@ -8766,6 +8857,8 @@ async function _doPush() {
     mkt_requests: JSON.parse(localStorage.getItem('ast_mkt_requests')   || '[]'),
     fiches:    JSON.parse(localStorage.getItem('ast_fiches')           || 'null'),
     convs:     JSON.parse(localStorage.getItem('ast_convs')             || '[]'),
+    usage:       JSON.parse(localStorage.getItem('ast_usage')           || 'null'),
+    usageBudget: (parseFloat(localStorage.getItem('ast_usage_budget')) > 0 ? parseFloat(localStorage.getItem('ast_usage_budget')) : 350),
     _updated:  firebase.firestore.FieldValue.serverTimestamp(),
     _author:   localStorage.getItem('ast_commercial') || ''
   };
@@ -8887,6 +8980,15 @@ function saveAdminConfig() {
 
   if (key)      localStorage.setItem('ast_api_key',  key);
   if (fbConfig) localStorage.setItem('ast_sync_key', JSON.stringify(fbConfig));
+  const budgetRaw = document.getElementById('api-budget-input')?.value.trim();
+  if (budgetRaw) {
+    const b = parseFloat(budgetRaw);
+    if (isFinite(b) && b > 0) {
+      localStorage.setItem('ast_usage_budget', String(b));
+      if (typeof renderApiGauge === 'function') renderApiGauge();
+      if (typeof syncPush === 'function') syncPush();   // share new budget with team
+    }
+  }
   okEl.style.display = 'block';
   setTimeout(() => okEl.style.display = 'none', 2500);
 }
@@ -8971,6 +9073,9 @@ if (!hasFbConfig || !existingKey) {
 document.getElementById('api-key-input')?.addEventListener('keydown', e => {
   if (e.key === 'Enter') setupApp();
 });
+
+// Pre-fill the admin "budget IA mensuel" field with the stored value
+(() => { const bi = document.getElementById('api-budget-input'); if (bi) bi.value = localStorage.getItem('ast_usage_budget') || ''; })();
 
 // ── DOCK MAGNIFY (macOS-style, vanilla, presentation-only) ──────────────
 (function initDockMagnify(){
