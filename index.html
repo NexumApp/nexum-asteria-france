@@ -851,6 +851,37 @@ body {
 .role-chip:active { transform: scale(0.96); }
 .role-chip.selected { border-color: var(--accent); background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(45,126,247,0.28); }
 
+/* ── Région → départements (picker dépliable) ── */
+.region-picker { border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--surface); max-height: 300px; overflow-y: auto; padding: 4px; }
+.region-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text); transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
+.region-row:hover { background: var(--accent-soft); }
+.region-row.selected { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(45,126,247,0.28); }
+.region-row-toggle { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 13px; color: var(--text3); flex-shrink: 0; transition: transform var(--dur) var(--ease), background var(--dur) var(--ease), color var(--dur) var(--ease); }
+.region-row-toggle:hover { background: rgba(13,27,46,0.06); color: var(--accent); }
+.region-row.selected .region-row-toggle { color: rgba(255,255,255,0.85); }
+.region-row-toggle.open { transform: rotate(90deg); }
+.region-row-name { flex: 1; min-width: 0; }
+.dept-list { display: none; padding: 2px 0 6px 0; }
+.dept-list.open { display: block; animation: ast-fade-up var(--dur) var(--ease-out); }
+.dept-item { display: flex; align-items: center; gap: 9px; padding: 6px 10px; margin: 2px 6px 2px 26px; border-left: 2px solid var(--border); border-radius: 0 7px 7px 0; cursor: pointer; font-size: 12px; color: var(--text2); transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
+.dept-item:hover { background: var(--accent-soft); color: var(--accent2); border-left-color: var(--accent); }
+.dept-item.selected { background: var(--accent); color: #fff; border-left-color: var(--accent); }
+.dept-code { font-variant-numeric: tabular-nums; font-weight: 700; opacity: 0.65; min-width: 26px; }
+.dept-item.selected .dept-code { opacity: 0.95; }
+.territory-geo-hint { font-size: 11px; color: var(--text3); margin-top: 6px; }
+
+/* ── Fiabilité : badges confiance / source / scoring ── */
+.conf-badge { display:inline-flex; align-items:center; gap:3px; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; border-radius:5px; padding:2px 6px; white-space:nowrap; }
+.conf-dot { font-size:10px; margin-left:4px; }
+.fit-badge, .prio-badge { display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:700; border-radius:6px; padding:3px 8px; margin-right:6px; }
+.fit-badge { background:#fff; }
+.signals-box, .approach-box { font-size:11px; line-height:1.5; color:rgba(255,255,255,.72); margin-top:8px; }
+.signals-box b, .approach-box b { color:#fff; font-weight:700; }
+.sources-line { font-size:10px; color:rgba(255,255,255,.45); margin-top:6px; }
+.tr-signals-box, .tr-approach-box { font-size:11px; line-height:1.5; color:var(--text2); margin-top:6px; }
+.tr-signals-box b, .tr-approach-box b { color:var(--text1); font-weight:700; }
+.tr-sources-line { font-size:10px; color:var(--text3); margin-top:5px; }
+
 /* ── API usage gauge (company / territory search) ── */
 .api-gauge { margin-bottom: 18px; max-width: 420px; }
 .api-gauge-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
@@ -2590,29 +2621,12 @@ body {
 
         <div class="territory-card">
           <!-- Région + taille -->
+          <div class="field-group" style="margin-bottom:16px">
+            <div class="field-lbl">📍 Zone géographique <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">(région ou département)</span></div>
+            <div class="region-picker" id="region-picker"></div>
+            <div class="territory-geo-hint" id="territory-geo-hint">Zone ciblée : Toute la France</div>
+          </div>
           <div class="territory-grid">
-            <div class="field-group">
-              <div class="field-lbl">📍 Région</div>
-              <select class="field-select" id="region-select">
-                <option value="">-- Toute la France --</option>
-                <option value="Île-de-France">Île-de-France</option>
-                <option value="Auvergne-Rhône-Alpes">Auvergne-Rhône-Alpes</option>
-                <option value="Hauts-de-France">Hauts-de-France</option>
-                <option value="Nouvelle-Aquitaine">Nouvelle-Aquitaine</option>
-                <option value="Occitanie">Occitanie</option>
-                <option value="Grand Est">Grand Est</option>
-                <option value="Provence-Alpes-Côte d'Azur">Provence-Alpes-Côte d'Azur</option>
-                <option value="Pays de la Loire">Pays de la Loire</option>
-                <option value="Bretagne">Bretagne</option>
-                <option value="Normandie">Normandie</option>
-                <option value="Bourgogne-Franche-Comté">Bourgogne-Franche-Comté</option>
-                <option value="Centre-Val de Loire">Centre-Val de Loire</option>
-                <option value="Corse">Corse</option>
-                <option value="Guadeloupe">Guadeloupe</option>
-                <option value="Martinique">Martinique</option>
-                <option value="Réunion">Réunion</option>
-              </select>
-            </div>
             <div class="field-group">
               <div class="field-lbl">👥 Taille d'entreprise</div>
               <select class="field-select" id="size-select">
@@ -3086,7 +3100,22 @@ body {
           <button class="mkt-modal-close" onclick="closeDealModal()">✕</button>
         </div>
         <div class="mkt-modal-body">
-          <div class="crm-section-label">Informations du deal</div>
+          <div class="crm-section-label">📇 Pré-remplir depuis le CRM</div>
+          <div class="crm-field-row">
+            <div class="crm-field">
+              <label class="crm-label">Entreprise (CRM)</label>
+              <select class="crm-input" id="dl-crm-company" onchange="onDealCompanySelect()">
+                <option value="">— Saisie manuelle —</option>
+              </select>
+            </div>
+            <div class="crm-field">
+              <label class="crm-label">Contact (CRM)</label>
+              <select class="crm-input" id="dl-crm-contact" onchange="onDealContactSelect()" disabled>
+                <option value="">— Aucun —</option>
+              </select>
+            </div>
+          </div>
+          <div class="crm-section-label" style="margin-top:14px">Informations du deal</div>
           <div class="crm-field-row">
             <div class="crm-field">
               <label class="crm-label">Nom du deal <span class="crm-req">*</span></label>
@@ -3131,6 +3160,16 @@ body {
             <div class="crm-field">
               <label class="crm-label">Fonction</label>
               <input class="crm-input" id="dl-contact-title" type="text" placeholder="Responsable Achats" />
+            </div>
+          </div>
+          <div class="crm-field-row">
+            <div class="crm-field">
+              <label class="crm-label">Email</label>
+              <input class="crm-input" id="dl-email" type="email" placeholder="marie.dupont@entreprise.com" />
+            </div>
+            <div class="crm-field">
+              <label class="crm-label">Téléphone</label>
+              <input class="crm-input" id="dl-phone" type="tel" placeholder="01 23 45 67 89" />
             </div>
           </div>
           <div class="crm-section-label" style="margin-top:14px">Financier</div>
@@ -4040,7 +4079,7 @@ async function doSearch() {
 }
 
 async function doTerritorySearch() {
-  const region = document.getElementById('region-select')?.value || '';
+  const geo    = selectedGeo || { type:'all', value:'', label:'Toute la France', region:'' };
   const size   = document.getElementById('size-select')?.value   || '';
   const sectors = Array.from(document.querySelectorAll('.sector-chip.selected')).map(el => el.dataset.sector);
   if (!sectors.length) { alert('Sélectionnez au moins un secteur.'); return; }
@@ -4049,7 +4088,7 @@ async function doTerritorySearch() {
 
   const btn = document.getElementById('territory-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Recherche…'; }
-  const regionLabel = document.getElementById('region-select')?.selectedOptions?.[0]?.text || region || 'France';
+  const regionLabel = geo.type === 'all' ? 'toute la France' : geo.label;
   document.getElementById('results-zone-t').innerHTML = `
     <div class="search-loading">
       <div class="ast-loader">
@@ -4062,7 +4101,7 @@ async function doTerritorySearch() {
     </div>`;
   try {
     const roles = getSelectedRoles('territory-role-chips');
-    const data = await callTerritoryProspecting(region, sectors, size, roles);
+    const data = await callTerritoryProspecting(geo, sectors, size, roles);
     setProgressT(4);
     renderTerritoryResults(data);
   } catch(e) {
@@ -4072,56 +4111,76 @@ async function doTerritorySearch() {
   }
 }
 
+// ── MODÈLES IA (centralisés — un seul endroit à modifier) ──────────────
+const AI_MODEL_SEARCH = 'claude-opus-4-8';   // recherche / qualification / scoring : le plus performant (Opus 4.8)
+const AI_MODEL_FAST   = 'claude-sonnet-4-6';  // features légères / micro-tâches fréquentes (actus, analyses courtes)
+
 async function callProspecting(companyName, roles) {
   const apiKey = localStorage.getItem('ast_api_key');
   const roleInstruction = buildRoleInstruction(roles);
 
-  const prompt = `Tu es un expert en intelligence commerciale B2B spécialisé dans la recherche approfondie de contacts acheteurs et décideurs pour un fournisseur d'étiquettes adhésives.
+  const prompt = `Tu es un analyste senior en intelligence commerciale B2B (fournisseur d'étiquettes adhésives). Ta mission : produire une fiche de prospection FIABLE et ACTIONNABLE sur l'entreprise "${companyName}", à partir de données publiques et professionnelles UNIQUEMENT.
 
-Utilise la recherche web de façon INTENSIVE et MÉTHODIQUE pour trouver des informations VÉRIFIÉES et CERTAINES sur l'entreprise "${companyName}". Ne te contente pas d'une seule recherche : effectue plusieurs requêtes successives et recoupe les sources avant de répondre.
-
-MÉTHODE DE RECHERCHE APPROFONDIE (enchaîne plusieurs recherches) :
-1. Site officiel de l'entreprise → standard, email de contact, adresse, activité réelle, taille/effectif
-2. LinkedIn (pages "people" de l'entreprise) → identifie nommément les décideurs des fonctions ciblées ci-dessous
-3. Annuaires & bases pro (Societe.com, Kompass, Pages Jaunes, registre du commerce) → confirme raison sociale, dirigeants, effectif
-4. Presse / actualités récentes → signaux d'achat (nouvelle usine, recrutement, levée de fonds, nouveau produit, certification)
-5. Recoupe CHAQUE nom sur au moins 2 sources avant de l'inclure
+═══ MÉTHODE DE RECHERCHE MULTI-SOURCES (enchaîne plusieurs recherches web, recoupe avant de conclure) ═══
+1. Site officiel → activité réelle, effectif, adresse, standard, emails de contact publiés
+2. LinkedIn (pages publiques "à propos" / "people", résultats indexés) → décideurs nommés des fonctions ciblées
+3. Bases légales & annuaires pro : Societe.com, Pappers, Infogreffe, Kompass, Verif, Pages Jaunes → raison sociale, SIREN, dirigeants, effectif, CA
+4. Presse & actualités récentes → SIGNAUX D'ACHAT (nouvelle usine/ligne, recrutement, levée de fonds, nouveau produit, certification, export, rebranding)
+5. Recoupe CHAQUE nom / email / téléphone sur au moins 2 sources indépendantes avant de l'inclure
 
 ${roleInstruction}
 
-RÈGLES STRICTES :
-- Ne mets que des informations dont tu es CERTAIN (trouvées et recoupées sur le web)
-- Si tu n'es pas sûr d'un email ou d'un téléphone : mets null (vaut mieux null que faux)
-- Pour le téléphone : numéro de standard/accueil trouvé sur le site officiel
-- Pour les emails : contact@, commercial@, achats@ ou emails trouvés sur le site / les annuaires
-- Ne jamais inventer un email, un téléphone ou un nom de personne
+═══ RÈGLE ABSOLUE — ZÉRO INVENTION (priorité sur tout le reste) ═══
+- Tu ne dois JAMAIS inventer ni deviner un email, un téléphone, un nom ou un titre. Une valeur "plausible" mais non vérifiée = INVENTÉE = INTERDITE.
+- Si une information n'est pas trouvée et recoupée de façon fiable → mets null. Un null est TOUJOURS préférable à une valeur incertaine.
+- N'infère JAMAIS un email par un schéma type "prenom.nom@domaine" : ne le mets que si tu l'as réellement vu publié.
+- Chaque information clé porte un niveau de confiance : "verified" (vu et recoupé sur ≥2 sources publiques), "probable" (1 source publique fiable, non recoupé), "not_found" (absent → la valeur associée DOIT être null).
+- Cite pour chaque contact la "source" réelle (ex: "linkedin", "site-officiel", "societe.com", "pappers", "presse:<média>").
 
-Réponds UNIQUEMENT avec un objet JSON valide, sans markdown :
+═══ RGPD / CONFORMITÉ ═══
+- Uniquement des données professionnelles PUBLIQUES et déjà indexées (base légale : intérêt légitime B2B).
+- Interdits : scraping derrière authentification, contournement de protections/anti-bot/rate-limits, données personnelles non professionnelles. Dans le doute, abstiens-toi (null).
+
+═══ QUALIFICATION COMMERCIALE ═══
+- Évalue l'adéquation de ce prospect pour un fournisseur d'étiquettes adhésives (secteurs forts : agroalimentaire, cosmétique, vin/spiritueux, pharma, logistique, industrie manufacturière).
+
+Réponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans texte autour :
 {
   "company": {
-    "name": "Nom exact",
-    "domain": "site-officiel.fr",
+    "name": "Raison sociale exacte",
+    "domain": "site-officiel.fr ou null",
     "industry": "Secteur précis",
-    "employees": "Taille réelle",
+    "employees": "Effectif réel ou null",
     "location": "Ville, Région (format court, sans numéro de rue ni code postal)",
     "description": "Activité réelle en 1 phrase",
-    "phone": "Numéro standard si trouvé sur le site sinon null",
-    "email": "Email général si trouvé sinon null"
+    "phone": "Standard vérifié ou null",
+    "email": "Email général public vérifié ou null",
+    "phone_confidence": "verified | probable | not_found",
+    "email_confidence": "verified | probable | not_found",
+    "fit_score": 0,
+    "priority": "chaud | tiède | froid",
+    "buying_signals": ["signal concret et daté si possible"],
+    "approach": "Angle d'approche commercial concret en 1 phrase (accroche liée au besoin étiquettes)",
+    "sources": ["nom ou URL des sources principales utilisées"]
   },
   "contacts": [
     {
-      "name": "Prénom Nom réel vérifié",
-      "title": "Titre exact",
-      "department": "Achats ou Direction ou Marketing",
-      "email": "email vérifié ou null",
+      "name": "Prénom Nom réel vérifié ou null",
+      "title": "Titre exact ou null",
+      "department": "Achats | Direction | Marketing | Production | Qualité | ...",
+      "email": "email public vérifié ou null",
       "phone": "ligne directe vérifiée ou null",
-      "linkedin": "URL LinkedIn vérifiée ou null",
-      "source": "linkedin ou site-web ou presse"
+      "linkedin": "URL LinkedIn publique vérifiée ou null",
+      "name_confidence": "verified | probable | not_found",
+      "email_confidence": "verified | probable | not_found",
+      "phone_confidence": "verified | probable | not_found",
+      "confidence": "verified | probable | not_found",
+      "source": "linkedin | site-officiel | societe.com | pappers | presse:<média>"
     }
   ]
 }
 
-Fournis 6 à 10 contacts réels et vérifiés, en respectant le ciblage demandé. Mets null sur tout champ incertain. Termine par un JSON complet et bien fermé.`;
+Fournis 4 à 10 contacts, en respectant STRICTEMENT le ciblage demandé et la règle zéro-invention (mieux vaut 4 contacts sûrs que 10 douteux). fit_score = entier 0-100. Mets null partout où tu n'es pas certain. Termine par un JSON complet et bien fermé.`;
 
   let messages = [{ role: 'user', content: prompt }];
   let attempts = 0;
@@ -4132,10 +4191,10 @@ Fournis 6 à 10 contacts réels et vérifiés, en respectant le ciblage demandé
     const forceAnswer = attempts >= MAX_ATTEMPTS; // dernier tour : on arrête de chercher et on force le JSON
 
     const body = {
-      model: 'claude-sonnet-4-6',
-      max_tokens: 6000,
+      model: AI_MODEL_SEARCH,
+      max_tokens: 8000,
       messages,
-      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }]
+      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 6 }]
     };
     if (forceAnswer) body.tool_choice = { type: 'none' };
 
@@ -4303,6 +4362,60 @@ function addSearchResultToCRM(payload) {
   btn.disabled = true;
 }
 
+// ── FIABILITÉ : helpers UI (confiance / source / scoring) ───────────────
+function _confMeta(level) {
+  if (level === 'verified')  return { icon: '✅', label: 'vérifié',     bg: '#dcfce7', fg: '#166534', bd: '#86efac' };
+  if (level === 'probable')  return { icon: '⚠️', label: 'à vérifier',  bg: '#fef9c3', fg: '#854d0e', bd: '#fde047' };
+  if (level === 'not_found') return { icon: '➖', label: 'non trouvé',   bg: '#f1f5f9', fg: '#64748b', bd: '#e2e8f0' };
+  return null;
+}
+function _confBadge(level, prefix) {
+  const m = _confMeta(level); if (!m) return '';
+  return `<span class="conf-badge" style="background:${m.bg};color:${m.fg};border:1px solid ${m.bd}">${m.icon} ${prefix ? prefix + ' ' : ''}${m.label}</span>`;
+}
+function _confDot(level) {
+  const m = _confMeta(level); if (!m) return '';
+  return `<span class="conf-dot" title="${m.label}">${m.icon}</span>`;
+}
+function _priorityMeta(p) {
+  const k = String(p || '').toLowerCase();
+  if (k.includes('chaud')) return { icon: '🔥', label: 'Chaud', bg: '#fee2e2', fg: '#b91c1c' };
+  if (k.includes('tièd') || k.includes('tied')) return { icon: '🌤️', label: 'Tiède', bg: '#fef3c7', fg: '#b45309' };
+  if (k.includes('froid')) return { icon: '❄️', label: 'Froid', bg: '#e0f2fe', fg: '#0369a1' };
+  return null;
+}
+function _scoreBadges(co) {
+  let out = '';
+  const fs = Number(co.fit_score);
+  if (!isNaN(fs) && fs > 0) {
+    const s = Math.max(0, Math.min(100, Math.round(fs)));
+    const color = s >= 70 ? '#16a34a' : s >= 40 ? '#d97706' : '#64748b';
+    out += `<span class="fit-badge" style="border:1px solid ${color}66;color:${color}">🎯 ${s}/100</span>`;
+  }
+  const pm = _priorityMeta(co.priority);
+  if (pm) out += `<span class="prio-badge" style="background:${pm.bg};color:${pm.fg}">${pm.icon} ${pm.label}</span>`;
+  return out;
+}
+function _signalsBlock(co) {
+  const sig = Array.isArray(co.buying_signals) ? co.buying_signals.filter(x => x && String(x).trim() && String(x).toLowerCase() !== 'null') : [];
+  let out = '';
+  if (sig.length) out += `<div class="signals-box">📈 <b>Signaux :</b> ${sig.map(_esc0).join(' · ')}</div>`;
+  if (co.approach && String(co.approach).toLowerCase() !== 'null') out += `<div class="approach-box">🎯 <b>Angle :</b> ${_esc0(co.approach)}</div>`;
+  const src = Array.isArray(co.sources) ? co.sources.filter(x => x && String(x).toLowerCase() !== 'null') : [];
+  if (src.length) out += `<div class="sources-line">🔎 Sources : ${src.map(_esc0).join(', ')}</div>`;
+  return out;
+}
+function _trSignalsBlock(co) {
+  const sig = Array.isArray(co.buying_signals) ? co.buying_signals.filter(x => x && String(x).trim() && String(x).toLowerCase() !== 'null') : [];
+  let out = '';
+  if (sig.length) out += `<div class="tr-signals-box">📈 <b>Signaux :</b> ${sig.map(_esc0).join(' · ')}</div>`;
+  if (co.approach && String(co.approach).toLowerCase() !== 'null') out += `<div class="tr-approach-box">🎯 <b>Angle :</b> ${_esc0(co.approach)}</div>`;
+  const src = Array.isArray(co.sources) ? co.sources.filter(x => x && String(x).toLowerCase() !== 'null') : [];
+  if (src.length) out += `<div class="tr-sources-line">🔎 Sources : ${src.map(_esc0).join(', ')}</div>`;
+  return out;
+}
+function _esc0(s) { return String(s).replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
 function renderResults(data) {
   const zone = document.getElementById('results-zone');
   const co = data.company || {};
@@ -4325,6 +4438,7 @@ function renderResults(data) {
     <div class="company-avatar-lg">${coInit}</div>
     <div class="company-info">
       <div class="company-name-lg">${co.name || '—'}</div>
+      ${_scoreBadges(co) ? `<div style="margin-top:6px">${_scoreBadges(co)}</div>` : ''}
       ${co.domain ? `<div class="company-domain">🌐 ${co.domain}</div>` : ''}
       ${co.description ? `<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:6px;line-height:1.5">${co.description}</div>` : ''}
       <div class="company-tags" style="margin-top:8px">
@@ -4333,9 +4447,10 @@ function renderResults(data) {
         ${co.location  ? `<span class="ctag">📍 ${co.location}</span>`  : ''}
       </div>
       ${(co.phone || co.email) ? `<div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
-        ${co.phone ? `<a href="tel:${co.phone}" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:5px 10px;color:#fff;text-decoration:none;font-size:12px;font-weight:600">📞 ${co.phone}</a>` : ''}
-        ${co.email ? `<a href="mailto:${co.email}" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:5px 10px;color:#fff;text-decoration:none;font-size:12px;font-weight:600">✉️ ${co.email}</a>` : ''}
+        ${co.phone ? `<a href="tel:${co.phone}" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:5px 10px;color:#fff;text-decoration:none;font-size:12px;font-weight:600">📞 ${co.phone}${_confDot(co.phone_confidence)}</a>` : ''}
+        ${co.email ? `<a href="mailto:${co.email}" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:5px 10px;color:#fff;text-decoration:none;font-size:12px;font-weight:600">✉️ ${co.email}${_confDot(co.email_confidence)}</a>` : ''}
       </div>` : ''}
+      ${_signalsBlock(co)}
     </div>
     <div class="hero-badge">${contacts.length} contact${contacts.length > 1 ? 's' : ''}</div>
   </div>`;
@@ -4369,14 +4484,15 @@ function renderResults(data) {
           <div class="card-top">
             <div class="avatar" style="background:${col.bg};color:${col.text}">${ini}</div>
             <div style="min-width:0">
-              <div class="card-name">${p.name || '—'}</div>
+              <div class="card-name">${p.name || '—'}${_confDot(p.name_confidence)}</div>
               <div class="card-title">${p.title || '—'}</div>
+              ${_confBadge(p.confidence) ? `<div style="margin-top:5px">${_confBadge(p.confidence)}</div>` : ''}
             </div>
           </div>
           <div class="card-divider"></div>
           <div class="card-details">
-            ${p.email ? `<div class="detail-row"><span class="detail-icon">✉</span><a href="mailto:${p.email}">${p.email}</a></div>` : ''}
-            ${p.phone ? `<div class="detail-row"><span class="detail-icon">📞</span><span>${p.phone}</span></div>` : ''}
+            ${p.email ? `<div class="detail-row"><span class="detail-icon">✉</span><a href="mailto:${p.email}">${p.email}</a>${_confDot(p.email_confidence)}</div>` : ''}
+            ${p.phone ? `<div class="detail-row"><span class="detail-icon">📞</span><span>${p.phone}</span>${_confDot(p.phone_confidence)}</div>` : ''}
             ${p.linkedin ? `<div class="detail-row"><span class="detail-icon">🔗</span><a href="${p.linkedin.startsWith('http')?p.linkedin:'https://'+p.linkedin}" target="_blank">Voir LinkedIn</a></div>` : ''}
             ${!p.email && !p.phone && !p.linkedin ? `<div class="no-data">Coordonnées non disponibles</div>` : ''}
             ${p.source ? `<div style="margin-top:6px"><span style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;background:#f1f5f9;color:#64748b;border-radius:4px;padding:2px 6px">✓ ${p.source}</span></div>` : ''}
@@ -4431,6 +4547,68 @@ function toggleSector(el) {
     n === 0 ? 'Sélectionnez au moins un secteur' : `${n} secteur${n>1?'s':''} sélectionné${n>1?'s':''}`;
 }
 
+// ── RÉGIONS → DÉPARTEMENTS (France métropolitaine, mapping officiel) ────
+const REGIONS_DEPTS = {
+  'Auvergne-Rhône-Alpes': [['01','Ain'],['03','Allier'],['07','Ardèche'],['15','Cantal'],['26','Drôme'],['38','Isère'],['42','Loire'],['43','Haute-Loire'],['63','Puy-de-Dôme'],['69','Rhône'],['73','Savoie'],['74','Haute-Savoie']],
+  'Bourgogne-Franche-Comté': [['21',"Côte-d'Or"],['25','Doubs'],['39','Jura'],['58','Nièvre'],['70','Haute-Saône'],['71','Saône-et-Loire'],['89','Yonne'],['90','Territoire de Belfort']],
+  'Bretagne': [['22',"Côtes-d'Armor"],['29','Finistère'],['35','Ille-et-Vilaine'],['56','Morbihan']],
+  'Centre-Val de Loire': [['18','Cher'],['28','Eure-et-Loir'],['36','Indre'],['37','Indre-et-Loire'],['41','Loir-et-Cher'],['45','Loiret']],
+  'Corse': [['2A','Corse-du-Sud'],['2B','Haute-Corse']],
+  'Grand Est': [['08','Ardennes'],['10','Aube'],['51','Marne'],['52','Haute-Marne'],['54','Meurthe-et-Moselle'],['55','Meuse'],['57','Moselle'],['67','Bas-Rhin'],['68','Haut-Rhin'],['88','Vosges']],
+  'Hauts-de-France': [['02','Aisne'],['59','Nord'],['60','Oise'],['62','Pas-de-Calais'],['80','Somme']],
+  'Île-de-France': [['75','Paris'],['77','Seine-et-Marne'],['78','Yvelines'],['91','Essonne'],['92','Hauts-de-Seine'],['93','Seine-Saint-Denis'],['94','Val-de-Marne'],['95',"Val-d'Oise"]],
+  'Normandie': [['14','Calvados'],['27','Eure'],['50','Manche'],['61','Orne'],['76','Seine-Maritime']],
+  'Nouvelle-Aquitaine': [['16','Charente'],['17','Charente-Maritime'],['19','Corrèze'],['23','Creuse'],['24','Dordogne'],['33','Gironde'],['40','Landes'],['47','Lot-et-Garonne'],['64','Pyrénées-Atlantiques'],['79','Deux-Sèvres'],['86','Vienne'],['87','Haute-Vienne']],
+  'Occitanie': [['09','Ariège'],['11','Aude'],['12','Aveyron'],['30','Gard'],['31','Haute-Garonne'],['32','Gers'],['34','Hérault'],['46','Lot'],['48','Lozère'],['65','Hautes-Pyrénées'],['66','Pyrénées-Orientales'],['81','Tarn'],['82','Tarn-et-Garonne']],
+  'Pays de la Loire': [['44','Loire-Atlantique'],['49','Maine-et-Loire'],['53','Mayenne'],['72','Sarthe'],['85','Vendée']],
+  "Provence-Alpes-Côte d'Azur": [['04','Alpes-de-Haute-Provence'],['05','Hautes-Alpes'],['06','Alpes-Maritimes'],['13','Bouches-du-Rhône'],['83','Var'],['84','Vaucluse']]
+};
+// Zone géographique sélectionnée (transmise au moteur de recherche)
+let selectedGeo = { type: 'all', value: '', label: 'Toute la France', region: '' };
+let _openRegions = new Set();
+
+function _esc(s) { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+function renderRegionPicker() {
+  const box = document.getElementById('region-picker');
+  if (!box) return;
+  let html = `<div class="region-row${selectedGeo.type==='all'?' selected':''}" onclick="selectTerritory('all','','Toute la France','')">
+      <span class="region-row-toggle" style="visibility:hidden">›</span>
+      <span class="region-row-name">🇫🇷 Toute la France</span>
+    </div>`;
+  Object.keys(REGIONS_DEPTS).forEach((region, ri) => {
+    const regSel = selectedGeo.type === 'region' && selectedGeo.value === region;
+    const isOpen = _openRegions.has(ri);
+    html += `<div class="region-row${regSel?' selected':''}" onclick="selectTerritory('region','${_esc(region)}','${_esc(region)}','')">
+        <span class="region-row-toggle${isOpen?' open':''}" onclick="event.stopPropagation();toggleRegionExpand(${ri})">›</span>
+        <span class="region-row-name">${region}</span>
+      </div>
+      <div class="dept-list${isOpen?' open':''}">`;
+    REGIONS_DEPTS[region].forEach(([code, name]) => {
+      const depSel = selectedGeo.type === 'department' && selectedGeo.value === code;
+      const label = code + ' – ' + name;
+      html += `<div class="dept-item${depSel?' selected':''}" onclick="selectTerritory('department','${code}','${_esc(label)}','${_esc(region)}')">
+          <span class="dept-code">${code}</span><span>${name}</span>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+  box.innerHTML = html;
+}
+
+function toggleRegionExpand(ri) {
+  if (_openRegions.has(ri)) _openRegions.delete(ri); else _openRegions.add(ri);
+  renderRegionPicker();
+}
+
+function selectTerritory(type, value, label, region) {
+  selectedGeo = { type, value, label, region };
+  if (type === 'department' && region) { const ri = Object.keys(REGIONS_DEPTS).indexOf(region); if (ri >= 0) _openRegions.add(ri); }
+  renderRegionPicker();
+  const hint = document.getElementById('territory-geo-hint');
+  if (hint) hint.textContent = 'Zone ciblée : ' + label;
+}
+
 // ── CONTACT ROLE TARGETING ────────────────────────────────────────────
 const ROLE_TARGETS = {
   achats:      { label: 'Achats / Approvisionnements', titles: 'Directeur des Achats, Responsable Achats, Acheteur, Responsable Approvisionnements' },
@@ -4473,65 +4651,86 @@ function setProgressT(step) {
 }
 
 // ── TERRITORY API CALL ────────────────────────────────────────────────
-async function callTerritoryProspecting(region, sectors, size, roles) {
+async function callTerritoryProspecting(geo, sectors, size, roles) {
   const apiKey = localStorage.getItem('ast_api_key');
   const sectorList = sectors.join(', ');
-  const regionStr  = region || 'toute la France';
-  const sizeStr    = size   || 'toutes tailles';
+  // Accepte l'objet zone {type,value,label,region} ou une chaîne région (rétro-compat)
+  const g = (geo && typeof geo === 'object') ? geo : { type: geo ? 'region' : 'all', value: geo || '', label: geo || '', region: '' };
+  const sizeStr    = size || 'toutes tailles';
   const roleInstruction = buildRoleInstruction(roles);
-  const regionInstr = region
-    ? `UNIQUEMENT dans la région "${region}" (départements de cette région uniquement, pas ailleurs en France)`
-    : 'sur toute la France';
+  const regionStr = (g.type === 'all') ? 'toute la France' : g.label;
+  const regionInstr =
+      g.type === 'all'        ? 'sur toute la France'
+    : g.type === 'department' ? `UNIQUEMENT dans le département "${g.label}"${g.region ? ` (région ${g.region})` : ''} — aucune entreprise hors de ce département`
+    :                           `UNIQUEMENT dans la région "${g.label}" (départements de cette région uniquement, pas ailleurs en France)`;
 
-  const prompt = `Tu es un expert en intelligence commerciale B2B spécialisé dans la recherche approfondie de prospects pour un fournisseur d'étiquettes adhésives.
+  const prompt = `Tu es un analyste senior en intelligence commerciale B2B (fournisseur d'étiquettes adhésives). Ta mission : constituer une liste de prospects FIABLES et QUALIFIÉS, à partir de données publiques et professionnelles UNIQUEMENT.
 
-CONTRAINTE GÉOGRAPHIQUE STRICTE : Cherche ${regionInstr}.
-Secteurs: ${sectorList} | Taille: ${sizeStr}
+═══ CONTRAINTE GÉOGRAPHIQUE STRICTE ═══
+Cherche ${regionInstr}.
+Secteurs ciblés : ${sectorList} | Taille : ${sizeStr}
+Chaque entreprise DOIT être réellement implantée dans "${regionStr}" (vérifie l'adresse sur une source publique).
 
-Utilise la recherche web de façon INTENSIVE : enchaîne plusieurs requêtes (annuaires régionaux, listes d'entreprises par secteur, LinkedIn, Societe.com, Kompass) et recoupe avant de répondre.
-
-MÉTHODE DE RECHERCHE APPROFONDIE :
-1. Identifie des entreprises réelles du/des secteur(s) demandé(s), réellement implantées dans "${regionStr}" (vérifie l'adresse)
-2. Pour chaque entreprise : site officiel → standard, email de contact, activité, effectif
-3. LinkedIn / Societe.com / Kompass → décideurs nommés des fonctions ciblées ci-dessous
-4. Recoupe chaque entreprise et chaque nom sur au moins 2 sources
+═══ MÉTHODE DE RECHERCHE MULTI-SOURCES (enchaîne plusieurs recherches, recoupe avant de conclure) ═══
+1. Annuaires régionaux, listes sectorielles, CCI, Pages Jaunes → entreprises réelles du secteur dans la zone
+2. Site officiel de chaque entreprise → activité, effectif, standard, emails de contact publiés
+3. Bases légales & annuaires pro : Societe.com, Pappers, Infogreffe, Kompass, Verif → raison sociale, dirigeants, effectif
+4. LinkedIn (pages publiques) → décideurs nommés des fonctions ciblées
+5. Presse & actualités → signaux d'achat (nouvelle usine/ligne, recrutement, certification, export...)
+6. Recoupe chaque entreprise ET chaque nom sur au moins 2 sources indépendantes
 
 ${roleInstruction}
 
-RÈGLES STRICTES :
-- Chaque entreprise DOIT être réellement localisée dans "${regionStr}"
-- Ne jamais inventer un email, un téléphone ou un nom de personne
-- Le numéro de téléphone = standard de l'entreprise trouvé sur son site
-- null si incertain (vaut mieux null que faux)
+═══ RÈGLE ABSOLUE — ZÉRO INVENTION (priorité sur tout le reste) ═══
+- Ne JAMAIS inventer ni deviner un email, un téléphone, un nom ou un titre. Une valeur "plausible" mais non vérifiée = INVENTÉE = INTERDITE.
+- Non trouvé / non recoupé de façon fiable → null. Un null est TOUJOURS préférable à une valeur incertaine.
+- N'infère JAMAIS un email par un schéma "prenom.nom@domaine" : ne le mets que si réellement vu publié.
+- Chaque info clé porte une confiance : "verified" (≥2 sources publiques), "probable" (1 source fiable), "not_found" (→ valeur null).
+- Cite la "source" réelle de chaque contact.
 
-Réponds UNIQUEMENT en JSON valide, sans markdown :
+═══ RGPD / CONFORMITÉ ═══
+- Uniquement des données professionnelles PUBLIQUES déjà indexées (base légale : intérêt légitime B2B).
+- Interdits : scraping derrière authentification, contournement de protections/rate-limits, données personnelles non pro. Dans le doute → null.
+
+Réponds UNIQUEMENT en JSON valide, sans markdown, sans texte autour :
 {
   "search": {"region": "${regionStr}", "sectors": ${JSON.stringify(sectors)}, "size": "${sizeStr}"},
   "companies": [
     {
-      "name": "Nom réel vérifié",
-      "domain": "site-officiel.fr",
+      "name": "Raison sociale exacte",
+      "domain": "site-officiel.fr ou null",
       "industry": "Secteur précis",
-      "employees": "Taille réelle",
+      "employees": "Effectif réel ou null",
       "location": "Ville, ${regionStr} (format court ex: Strasbourg, Grand Est)",
       "description": "Activité en 1 phrase",
-      "phone": "Standard trouvé sur site ou null",
-      "email": "Email contact trouvé ou null",
+      "phone": "Standard vérifié ou null",
+      "email": "Email contact public vérifié ou null",
+      "phone_confidence": "verified | probable | not_found",
+      "email_confidence": "verified | probable | not_found",
+      "fit_score": 0,
+      "priority": "chaud | tiède | froid",
+      "buying_signals": ["signal concret si trouvé"],
+      "approach": "Angle d'approche commercial concret en 1 phrase",
+      "sources": ["nom ou URL des sources principales"],
       "contacts": [
         {
-          "name": "Prénom Nom vérifié",
-          "title": "Titre exact",
-          "department": "Achats/Marketing/Direction",
-          "email": "email vérifié ou null",
-          "phone": "null",
-          "linkedin": "URL vérifiée ou null",
-          "source": "linkedin/site/kompass"
+          "name": "Prénom Nom vérifié ou null",
+          "title": "Titre exact ou null",
+          "department": "Achats | Marketing | Direction | Production | Qualité | ...",
+          "email": "email public vérifié ou null",
+          "phone": "ligne directe vérifiée ou null",
+          "linkedin": "URL LinkedIn publique vérifiée ou null",
+          "name_confidence": "verified | probable | not_found",
+          "email_confidence": "verified | probable | not_found",
+          "phone_confidence": "verified | probable | not_found",
+          "confidence": "verified | probable | not_found",
+          "source": "linkedin | site-officiel | societe.com | pappers | presse:<média>"
         }
       ]
     }
   ]
 }
-Trouve 6 entreprises réelles dans "${regionStr}" avec 4 à 5 contacts vérifiés chacune, en respectant le ciblage demandé. JSON complet et bien fermé.`;
+Trouve 4 à 6 entreprises RÉELLES dans "${regionStr}" avec 2 à 5 contacts sûrs chacune, en respectant STRICTEMENT le ciblage et la règle zéro-invention (mieux vaut moins de contacts mais fiables). fit_score = entier 0-100. Mets null partout où tu n'es pas certain. JSON complet et bien fermé.`;
 
   let messages = [{ role: 'user', content: prompt }];
   let attempts = 0;
@@ -4542,10 +4741,10 @@ Trouve 6 entreprises réelles dans "${regionStr}" avec 4 à 5 contacts vérifié
     const forceAnswer = attempts >= MAX_ATTEMPTS; // dernier tour : on arrête de chercher et on force le JSON
 
     const body = {
-      model: 'claude-sonnet-4-6',
-      max_tokens: 6000,
+      model: AI_MODEL_SEARCH,
+      max_tokens: 8000,
       messages,
-      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 6 }]
+      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 7 }]
     };
     if (forceAnswer) body.tool_choice = { type: 'none' };
 
@@ -4682,6 +4881,8 @@ function renderTerritoryResults(data) {
         <div style="flex:1;min-width:0">
           <div class="rcc-name">${co.name||'—'}</div>
           <div class="rcc-meta">${[co.industry,co.location,co.employees].filter(Boolean).join(' · ')}</div>
+          ${_scoreBadges(co) ? `<div style="margin-top:6px">${_scoreBadges(co)}</div>` : ''}
+          ${_trSignalsBlock(co)}
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           <div class="dept-pill count-badge">${contacts.length} contact${contacts.length>1?'s':''}</div>
@@ -4697,16 +4898,18 @@ function renderTerritoryResults(data) {
             <div class="card-top">
               <div class="avatar" style="background:${c2.bg};color:${c2.text}">${initials(p.name||'?')}</div>
               <div style="min-width:0">
-                <div class="card-name">${p.name||'—'}</div>
+                <div class="card-name">${p.name||'—'}${_confDot(p.name_confidence)}</div>
                 <div class="card-title">${p.title||'—'}</div>
+                ${_confBadge(p.confidence) ? `<div style="margin-top:5px">${_confBadge(p.confidence)}</div>` : ''}
               </div>
             </div>
             <div class="card-divider"></div>
             <div class="card-details">
-              ${p.email?`<div class="detail-row"><span class="detail-icon">✉</span><a href="mailto:${p.email}">${p.email}</a></div>`:''}
-              ${p.phone?`<div class="detail-row"><span class="detail-icon">📞</span>${p.phone}</div>`:''}
+              ${p.email?`<div class="detail-row"><span class="detail-icon">✉</span><a href="mailto:${p.email}">${p.email}</a>${_confDot(p.email_confidence)}</div>`:''}
+              ${p.phone?`<div class="detail-row"><span class="detail-icon">📞</span>${p.phone}${_confDot(p.phone_confidence)}</div>`:''}
               ${p.linkedin?`<div class="detail-row"><span class="detail-icon">🔗</span><a href="${p.linkedin.startsWith('http')?p.linkedin:'https://'+p.linkedin}" target="_blank">LinkedIn</a></div>`:''}
               ${!p.email&&!p.phone&&!p.linkedin?`<div class="no-data">Coordonnées non disponibles</div>`:''}
+              ${p.source?`<div style="margin-top:6px"><span style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;background:#f1f5f9;color:#64748b;border-radius:4px;padding:2px 6px">✓ ${p.source}</span></div>`:''}
             </div>
             <button class="card-crm-btn" onclick='addSearchResultToCRM(${JSON.stringify({company: coPayload, contact: p}).replace(/'/g,"&#39;")})' title="Ajouter ce contact au CRM">
               ➕ Ajouter au CRM
@@ -6565,7 +6768,7 @@ Réponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans texte avant o
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: AI_MODEL_FAST,
         max_tokens: 2000,
         messages: [{ role: 'user', content: PROMPT }]
       })
@@ -7674,6 +7877,9 @@ function saveDeals(d) { localStorage.setItem('ast_deals', JSON.stringify(d)); sy
 
 function openDealModal(id) {
   dealEditId = id || null;
+  populateDealCrmSelectors();                 // alimente la liste d'entreprises depuis le CRM
+  const cSel = document.getElementById('dl-crm-company'); if (cSel) cSel.value = '';
+  const ctSel = document.getElementById('dl-crm-contact'); if (ctSel) { ctSel.innerHTML = '<option value="">— Aucun —</option>'; ctSel.disabled = true; }
   const me = localStorage.getItem('ast_commercial') || '';
   if (id) {
     const d = getDeals().find(x => x.id == id);
@@ -7684,6 +7890,8 @@ function openDealModal(id) {
     document.getElementById('dl-sector').value        = d.sector || '';
     document.getElementById('dl-contact').value       = d.contact || '';
     document.getElementById('dl-contact-title').value = d.contactTitle || '';
+    document.getElementById('dl-email').value         = d.email || '';
+    document.getElementById('dl-phone').value         = d.phone || '';
     document.getElementById('dl-value').value         = d.value || '';
     document.getElementById('dl-probability').value   = d.probability || '';
     document.getElementById('dl-close-date').value    = d.closeDate || '';
@@ -7692,7 +7900,7 @@ function openDealModal(id) {
     document.getElementById('dl-notes').value         = d.notes || '';
     document.getElementById('deal-modal-title').textContent = 'Modifier le deal';
   } else {
-    ['dl-name','dl-company','dl-sector','dl-contact','dl-contact-title','dl-value','dl-probability','dl-close-date','dl-product','dl-next-action','dl-notes'].forEach(id => {
+    ['dl-name','dl-company','dl-sector','dl-contact','dl-contact-title','dl-email','dl-phone','dl-value','dl-probability','dl-close-date','dl-product','dl-next-action','dl-notes'].forEach(id => {
       const el = document.getElementById(id); if(el) el.value = '';
     });
     document.getElementById('dl-stage').value = 'prospect';
@@ -7700,6 +7908,49 @@ function openDealModal(id) {
   }
   document.getElementById('deal-error').textContent = '';
   document.getElementById('deal-modal').style.display = 'flex';
+}
+
+// ── Deal ← auto-remplissage depuis le CRM ─────────────────────────────
+// Réutilise la structure CRM existante (crmProspects, schéma plat : 1 enreg. = 1 entreprise + 1 contact).
+function populateDealCrmSelectors() {
+  const sel = document.getElementById('dl-crm-company');
+  if (!sel) return;
+  const companies = [...new Set(crmProspects.map(p => p.company).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
+  sel.innerHTML = '<option value="">— Saisie manuelle —</option>' +
+    companies.map(c => `<option value="${String(c).replace(/"/g,'&quot;')}">${c}</option>`).join('');
+}
+function onDealCompanySelect() {
+  const company = document.getElementById('dl-crm-company').value;
+  const ctSel   = document.getElementById('dl-crm-contact');
+  if (!company) {  // « Saisie manuelle » : ne rien pré-remplir
+    ['dl-company','dl-sector','dl-contact','dl-contact-title','dl-email','dl-phone'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    ctSel.innerHTML = '<option value="">— Aucun —</option>'; ctSel.disabled = true;
+    return;
+  }
+  const records = crmProspects.filter(p => p.company === company);
+  document.getElementById('dl-company').value = company;
+  if (records[0] && records[0].sector) document.getElementById('dl-sector').value = records[0].sector;
+  const contacts = records.filter(p => p.contactName);
+  ctSel.disabled = contacts.length === 0;
+  ctSel.innerHTML = '<option value="">' + (contacts.length ? '— Choisir un contact —' : '— Aucun contact au CRM —') + '</option>' +
+    contacts.map(p => `<option value="${p.id}">${p.contactName}${p.contactTitle?' · '+p.contactTitle:''}</option>`).join('');
+  if (contacts.length === 1) { ctSel.value = String(contacts[0].id); fillDealFromProspect(contacts[0]); }
+  else { ['dl-contact','dl-contact-title','dl-email','dl-phone'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; }); }
+}
+function onDealContactSelect() {
+  const pid = document.getElementById('dl-crm-contact').value;
+  if (!pid) { ['dl-contact','dl-contact-title','dl-email','dl-phone'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; }); return; }
+  const p = crmProspects.find(x => String(x.id) === String(pid));
+  if (p) fillDealFromProspect(p);
+}
+function fillDealFromProspect(p) {
+  document.getElementById('dl-contact').value       = p.contactName  || '';
+  document.getElementById('dl-contact-title').value = p.contactTitle || '';
+  document.getElementById('dl-email').value         = p.email || '';
+  document.getElementById('dl-phone').value         = p.phone || '';
+  if (p.sector) document.getElementById('dl-sector').value = p.sector;
+  // NB : valeur du deal, probabilité, date de closing, produit, prochaine action et notes
+  // ne sont JAMAIS auto-remplis (saisie manuelle du commercial) — jamais inventés.
 }
 
 function closeDealModal() { document.getElementById('deal-modal').style.display = 'none'; dealEditId = null; }
@@ -7721,6 +7972,8 @@ function saveDeal() {
     sector:       document.getElementById('dl-sector').value,
     contact:      document.getElementById('dl-contact').value.trim(),
     contactTitle: document.getElementById('dl-contact-title').value.trim(),
+    email:        document.getElementById('dl-email').value.trim(),
+    phone:        document.getElementById('dl-phone').value.trim(),
     value,
     probability:  parseInt(document.getElementById('dl-probability').value) || STAGES[stage]?.prob || 50,
     stage,
@@ -7992,7 +8245,7 @@ Réponds UNIQUEMENT en JSON valide:
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1500, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: AI_MODEL_FAST, max_tokens: 1500, messages: [{ role: 'user', content: prompt }] })
     });
     const data = await resp.json();
     trackApiUsage(data.usage);
@@ -8190,7 +8443,7 @@ Règles:
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: AI_MODEL_FAST,
         max_tokens: 3000,
         messages: [{ role: 'user', content: prompt }]
       })
@@ -9189,6 +9442,9 @@ document.getElementById('api-key-input')?.addEventListener('keydown', e => {
 
 // Pre-fill the admin "budget IA mensuel" field with the stored value
 (() => { const bi = document.getElementById('api-budget-input'); if (bi) bi.value = localStorage.getItem('ast_usage_budget') || ''; })();
+
+// Build the region → departments picker (Tâche 3)
+(() => { if (typeof renderRegionPicker === 'function') renderRegionPicker(); })();
 
 // ── DOCK MAGNIFY (macOS-style, vanilla, presentation-only) ──────────────
 (function initDockMagnify(){
