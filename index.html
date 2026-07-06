@@ -2339,13 +2339,21 @@ body {
             🗑️ Supprimer la photo
           </button>
           <div class="profile-dropdown-divider"></div>
+          <button class="profile-dropdown-btn" onclick="exportBackup(); closeProfileDropdown()">
+            💾 Exporter une sauvegarde
+          </button>
+          <button class="profile-dropdown-btn" onclick="triggerRestoreFile()">
+            ♻️ Restaurer une sauvegarde
+          </button>
+          <div class="profile-dropdown-divider"></div>
           <button class="profile-dropdown-btn danger" onclick="signOut(); closeProfileDropdown()">
             🚪 Changer de profil
           </button>
         </div>
       </div>
-      <!-- Hidden file input -->
+      <!-- Hidden file inputs -->
       <input type="file" id="profile-photo-input" class="profile-photo-input" accept="image/*" onchange="handleProfilePhotoUpload(this)" />
+      <input type="file" id="restore-file-input" accept="application/json,.json" style="display:none" onchange="handleRestoreFile(this)" />
     </div>
   </div>
 
@@ -8753,6 +8761,42 @@ function ensureFirebase() {
 // an empty localStorage (e.g. when configuring the app on a fresh device).
 let _syncReady = false;
 
+// Map of the shared-document data fields → their localStorage keys.
+const _SHARED_ARRAY_KEYS = {
+  crm:'ast_crm', map:'ast_map_companies', channel:'ast_channel', campaigns:'ast_campaigns',
+  samples:'ast_samples', sequences:'ast_sequences', deals:'ast_deals', agenda:'ast_agenda',
+  mkt_requests:'ast_mkt_requests', convs:'ast_convs'
+};
+// True if a remote record carries NO shared data at all (signature of a wiped/blank doc).
+function sharedDataIsEmpty(rec) {
+  if (!rec) return true;
+  for (const f in _SHARED_ARRAY_KEYS) { if (Array.isArray(rec[f]) && rec[f].length) return false; }
+  if (rec.lib && (!Array.isArray(rec.lib) || rec.lib.length)) return false;
+  if (rec.fiches && (!Array.isArray(rec.fiches) || rec.fiches.length)) return false;
+  return true;
+}
+// True if THIS device currently holds shared data locally.
+function localHasSharedData() {
+  for (const f in _SHARED_ARRAY_KEYS) {
+    try { const a = JSON.parse(localStorage.getItem(_SHARED_ARRAY_KEYS[f]) || '[]'); if (Array.isArray(a) && a.length) return true; } catch(e){}
+  }
+  try { const l = JSON.parse(localStorage.getItem('ast_lib') || 'null'); if (Array.isArray(l) ? l.length : !!l) return true; } catch(e){}
+  try { const fi = JSON.parse(localStorage.getItem('ast_fiches') || 'null'); if (Array.isArray(fi) ? fi.length : !!fi) return true; } catch(e){}
+  return false;
+}
+// Rolling local safety backups (keeps the last good snapshots on this device).
+function snapshotLocalBackup(reason) {
+  if (!localHasSharedData()) return;              // never back up an empty state
+  const keys = ['ast_crm','ast_map_companies','ast_channel','ast_campaigns','ast_samples',
+    'ast_sequences','ast_deals','ast_agenda','ast_mkt_requests','ast_convs','ast_lib','ast_fiches'];
+  const data = {};
+  keys.forEach(k => { const v = localStorage.getItem(k); if (v != null) data[k] = v; });
+  let list; try { list = JSON.parse(localStorage.getItem('ast_backups') || '[]'); } catch(e) { list = []; }
+  list.push({ ts: new Date().toISOString(), reason: reason || '', data });
+  while (list.length > 4) list.shift();           // keep the last 4
+  try { localStorage.setItem('ast_backups', JSON.stringify(list)); } catch(e){}
+}
+
 // ── PULL (Firestore → local) ──────────────────────────────────────
 async function syncPull() {
   if (!ensureFirebase()) throw new Error('Firebase non initialisé');
@@ -8768,12 +8812,23 @@ async function syncPull() {
     return;
   }
   const rec = snap.data();
+  _syncReady = true;             // we've read the shared doc → pushes (incl. self-heal) are safe
   applyRemoteData(rec);
-  _syncReady = true;     // we now hold the shared data → pushes are safe
+  snapshotLocalBackup('sync');   // rolling backup of the good state
 }
 
 function applyRemoteData(rec) {
   if (!rec) return;
+  // SELF-HEAL: an incoming update that is entirely empty while THIS device still holds
+  // data is treated as an accidental wipe → do NOT overwrite locally; back it up and
+  // push our good data back to restore the shared document for the whole team.
+  if (sharedDataIsEmpty(rec) && localHasSharedData()) {
+    console.warn('[NEXUM] Mise à jour distante vide ignorée (auto-réparation) — données locales conservées et re-synchronisées.');
+    snapshotLocalBackup('auto-reparation');
+    if (_syncReady && typeof syncPush === 'function') syncPush();
+    if (typeof renderApiGauge === 'function') renderApiGauge();
+    return;
+  }
   if (Array.isArray(rec.crm))       { crmProspects = rec.crm;   localStorage.setItem('ast_crm', JSON.stringify(rec.crm)); }
   if (Array.isArray(rec.map))       { mapCompanies = rec.map;   localStorage.setItem('ast_map_companies', JSON.stringify(rec.map)); }
   if (Array.isArray(rec.channel))   localStorage.setItem('ast_channel',   JSON.stringify(rec.channel));
@@ -8963,6 +9018,51 @@ function toggleAdminPanel() {
   const existingSync = localStorage.getItem('ast_sync_key');
   if (existingKey) document.getElementById('api-key-input').value = existingKey;
   if (existingSync) document.getElementById('sync-key-input').value = existingSync;
+}
+
+// ── MANUAL BACKUP / RESTORE ────────────────────────────────────────
+function _backupKeys() {
+  const base = ['ast_crm','ast_map_companies','ast_channel','ast_campaigns','ast_samples',
+    'ast_sequences','ast_deals','ast_agenda','ast_mkt_requests','ast_convs','ast_lib','ast_fiches',
+    'ast_usage','ast_usage_budget'];
+  for (let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if (k && (k.startsWith('ast_msgs_') || k==='ast_all_msgs')) base.push(k); }
+  return base;
+}
+function exportBackup() {
+  const dump = {};
+  _backupKeys().forEach(k => { const v = localStorage.getItem(k); if (v != null) dump[k] = v; });
+  const blob = new Blob([JSON.stringify({ _nexum_backup: 1, ts: new Date().toISOString(), data: dump }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'nexum-sauvegarde-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+function triggerRestoreFile() { document.getElementById('restore-file-input')?.click(); }
+function handleRestoreFile(input) {
+  const file = input.files && input.files[0];
+  if (!file) { return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      const data = (parsed && parsed.data && typeof parsed.data === 'object') ? parsed.data : parsed;
+      if (!data || typeof data !== 'object') throw new Error('Format non reconnu');
+      const nbKeys = Object.keys(data).filter(k => k.startsWith('ast_')).length;
+      if (!nbKeys) throw new Error('Aucune donnée NEXUM dans ce fichier');
+      if (!confirm('Restaurer cette sauvegarde ? Les données actuelles de l\'équipe seront remplacées par celles du fichier.')) { input.value = ''; return; }
+      snapshotLocalBackup('avant-restauration');
+      Object.keys(data).forEach(k => { if (k.startsWith('ast_') && typeof data[k] === 'string') localStorage.setItem(k, data[k]); });
+      try { crmProspects = JSON.parse(localStorage.getItem('ast_crm') || '[]'); } catch(e){}
+      try { mapCompanies = JSON.parse(localStorage.getItem('ast_map_companies') || '[]'); } catch(e){}
+      if (_syncReady && typeof syncPush === 'function') syncPush();
+      alert('✅ Sauvegarde restaurée. La synchronisation met l\'équipe à jour.');
+      location.reload();
+    } catch(e) {
+      alert('❌ Fichier de sauvegarde invalide : ' + e.message);
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
 }
 
 function saveAdminConfig() {
