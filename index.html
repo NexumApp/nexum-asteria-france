@@ -8748,6 +8748,11 @@ function ensureFirebase() {
   return !!db;
 }
 
+// SAFETY: never push to Firestore until we have pulled the shared doc at least
+// once this session. This makes it impossible to overwrite the team's data with
+// an empty localStorage (e.g. when configuring the app on a fresh device).
+let _syncReady = false;
+
 // ── PULL (Firestore → local) ──────────────────────────────────────
 async function syncPull() {
   if (!ensureFirebase()) throw new Error('Firebase non initialisé');
@@ -8759,10 +8764,12 @@ async function syncPull() {
       lib:null, sequences:[], deals:[], convs:[],
       _updated: firebase.firestore.FieldValue.serverTimestamp()
     });
+    _syncReady = true;   // genuinely-new project → pushes are safe
     return;
   }
   const rec = snap.data();
   applyRemoteData(rec);
+  _syncReady = true;     // we now hold the shared data → pushes are safe
 }
 
 function applyRemoteData(rec) {
@@ -8807,6 +8814,7 @@ function startRealtimeSync() {
       if (Date.now() - serverTs < 3000) { showSyncIndicator('idle'); return; }
     }
     applyRemoteData(rec);
+    _syncReady = true;   // we hold the shared data → pushes are safe
     // Refresh visible UI
     const panel = document.querySelector('.tab-panel.active');
     if (panel?.id === 'panel-crm') renderCrmList();
@@ -8844,6 +8852,9 @@ function syncPush() {
 
 async function _doPush() {
   if (!ensureFirebase()) return;
+  // SAFETY: do not overwrite the shared doc before we've pulled it (prevents wiping
+  // the team's data from a device whose localStorage isn't populated yet).
+  if (!_syncReady) { showSyncIndicator('idle'); return; }
   const data = {
     crm:       JSON.parse(localStorage.getItem('ast_crm')              || '[]'),
     map:       JSON.parse(localStorage.getItem('ast_map_companies')     || '[]'),
@@ -8986,7 +8997,9 @@ function saveAdminConfig() {
     if (isFinite(b) && b > 0) {
       localStorage.setItem('ast_usage_budget', String(b));
       if (typeof renderApiGauge === 'function') renderApiGauge();
-      if (typeof syncPush === 'function') syncPush();   // share new budget with team
+      // NOTE: do NOT push here — this runs on the setup screen before syncPull,
+      // so pushing would overwrite the shared doc with empty data. The budget
+      // syncs safely on the next save/search once logged in (guarded by _syncReady).
     }
   }
   okEl.style.display = 'block';
