@@ -881,9 +881,81 @@ body {
 .tr-signals-box, .tr-approach-box { font-size:11px; line-height:1.5; color:var(--text2); margin-top:6px; }
 .tr-signals-box b, .tr-approach-box b { color:var(--text1); font-weight:700; }
 .tr-sources-line { font-size:10px; color:var(--text3); margin-top:5px; }
+.li-scope { font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:#94a3b8; margin-left:6px; }
+.li-absent { font-size:11px; color:#94a3b8; }
+.contact-general { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#92400e; background:#fef3c7; border:1px solid #fcd34d; border-radius:4px; padding:1px 5px; margin-left:4px; }
+
+/* ── Carte de visite (OCR) ── */
+.card-zones { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media (max-width:560px){ .card-zones{ grid-template-columns:1fr; } }
+.card-drop { border:2px dashed var(--border); border-radius:14px; background:var(--surface); min-height:150px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; cursor:pointer; text-align:center; padding:16px; transition:border-color .15s, background .15s; }
+.card-drop:hover { border-color:var(--accent); background:rgba(59,124,244,0.04); }
+.card-drop-emoji { font-size:30px; }
+.card-drop-label { font-size:13px; font-weight:700; color:var(--text1); }
+.card-drop-sub { font-size:11px; color:var(--text3); }
+.card-drop.filled { border-style:solid; padding:8px; cursor:default; }
+.card-thumb { width:100%; max-height:170px; object-fit:contain; border-radius:10px; display:block; background:#0f1729; }
+.card-retake { margin-top:8px; width:100%; font-size:12px; font-weight:600; color:var(--text2); background:var(--surface); border:1.5px solid var(--border); border-radius:8px; padding:7px; cursor:pointer; }
+.card-retake:hover { border-color:#ef4444; color:#b91c1c; }
+.card-hint { font-size:11px; color:var(--text3); margin-top:12px; line-height:1.5; }
+.card-review-head { display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap; margin-bottom:14px; }
+.card-review-thumbs { display:flex; gap:8px; }
+.card-review-thumbs img { width:88px; height:56px; object-fit:cover; border-radius:8px; border:1px solid var(--border); background:#0f1729; }
+.card-conf { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; border-radius:8px; padding:6px 12px; }
+.card-review-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; }
+@media (max-width:560px){ .card-review-grid{ grid-template-columns:1fr; } }
+.card-field { display:flex; flex-direction:column; gap:4px; }
+.card-field.full { grid-column:1 / -1; }
+.card-field label { font-size:11px; font-weight:600; color:var(--text2); }
+.card-field input, .card-field select, .card-field textarea { font-size:13px; padding:9px 11px; border:1.5px solid var(--border); border-radius:9px; background:var(--surface); color:var(--text1); font-family:inherit; width:100%; box-sizing:border-box; }
+.card-field input:focus, .card-field select:focus, .card-field textarea:focus { outline:none; border-color:var(--accent); }
+.card-field.missing input, .card-field.missing textarea { border-color:#f59e0b; background:#fffbeb; }
+.card-field .field-warn { font-size:10px; color:#b45309; font-weight:600; }
+.card-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+.card-toast { background:#dcfce7; border:1px solid #86efac; color:#166534; border-radius:12px; padding:12px 16px; font-size:13px; font-weight:600; margin-bottom:14px; }
+
+/* ── Import Excel/CSV ── */
+.crm-import-btn { width:100%; margin:2px 0 14px; padding:10px; font-size:12px; font-weight:700; color:#166534; background:#f0fdf4; border:1.5px solid #86efac; border-radius:10px; cursor:pointer; transition:background .15s; }
+.crm-import-btn:hover { background:#dcfce7; }
+.imp-overlay { position:fixed; inset:0; background:rgba(15,23,41,0.55); z-index:3000; display:flex; align-items:center; justify-content:center; padding:18px; }
+.imp-modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; width:100%; max-width:840px; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.35); }
+.imp-head { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
+.imp-head h3 { margin:0; font-size:15px; font-weight:700; color:var(--text1); }
+.imp-body { padding:16px 20px; overflow:auto; }
+.imp-map-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:9px 12px; }
+.imp-map-field label { display:block; font-size:11px; font-weight:600; color:var(--text2); margin-bottom:3px; }
+.imp-map-field select { width:100%; font-size:12px; padding:7px 9px; border:1.5px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text1); font-family:inherit; }
+.imp-stats { display:flex; gap:18px; flex-wrap:wrap; margin:16px 0 10px; font-size:12px; color:var(--text2); }
+.imp-stats b { font-size:18px; color:var(--text1); display:block; }
+.imp-preview { border:1px solid var(--border); border-radius:10px; overflow:auto; max-height:260px; }
+.imp-preview table { width:100%; border-collapse:collapse; font-size:11px; }
+.imp-preview th { text-align:left; padding:7px 9px; background:var(--surface); position:sticky; top:0; font-weight:700; color:var(--text2); white-space:nowrap; border-bottom:1px solid var(--border); }
+.imp-preview td { padding:6px 9px; border-top:1px solid var(--border); white-space:nowrap; max-width:170px; overflow:hidden; text-overflow:ellipsis; color:var(--text1); }
+.imp-preview tr.dup td { opacity:.45; }
+.imp-actions { display:flex; gap:10px; justify-content:flex-end; padding:14px 20px; border-top:1px solid var(--border); }
+.detail-row.detail-muted { opacity:.75; }
+.pole-target { font-size:10px; font-weight:700; color:#166534; background:#dcfce7; border:1px solid #86efac; border-radius:5px; padding:1px 7px; margin-left:6px; vertical-align:middle; }
+.search-cancel-btn { margin-top:18px; font-size:12px; font-weight:600; color:var(--text2); background:var(--surface); border:1.5px solid var(--border); border-radius:99px; padding:7px 18px; cursor:pointer; transition:all .15s; }
+.search-cancel-btn:hover { border-color:#ef4444; color:#b91c1c; }
+.company-geo { margin-top: 14px; }
+.company-geo-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:8px; }
+.geo-field { flex:1; min-width:150px; font-size:13px; padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; background:var(--surface); color:var(--text1); font-family:inherit; }
+.geo-field:focus { outline:none; border-color:var(--accent); }
+.reveal-banner { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; background:linear-gradient(135deg,#fff7ed,#fef3c7); border:1px solid #fcd34d; border-radius:12px; padding:12px 16px; margin-bottom:16px; }
+.reveal-banner .reveal-txt { font-size:12px; color:#78350f; line-height:1.5; flex:1; min-width:220px; }
+.reveal-btn { flex-shrink:0; background:#b45309; color:#fff; border:none; border-radius:8px; padding:9px 16px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; transition:background .15s; }
+.reveal-btn:hover { background:#92400e; }
 
 /* ── API usage gauge (company / territory search) ── */
 .api-gauge { margin-bottom: 18px; max-width: 420px; }
+.engine-switch { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+.engine-lbl { font-size:11px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:.05em; }
+.engine-opt { font-size:12px; font-weight:600; border:1.5px solid var(--border); background:var(--surface); color:var(--text2); border-radius:99px; padding:5px 12px; cursor:pointer; transition:all .15s; }
+.engine-opt:hover { border-color:var(--accent); }
+.engine-opt.active { background:var(--navy); color:#fff; border-color:var(--navy); }
+.engine-badge-on { font-size:11px; font-weight:700; color:var(--green); }
+.engine-hint { font-size:11px; color:var(--text3); }
+.engine-token { font-size:12px; border:1.5px solid #fcd34d; border-radius:8px; padding:5px 10px; width:200px; font-family:'JetBrains Mono',monospace; }
 .api-gauge-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .api-gauge-lbl { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
 .api-gauge-pct { font-size: 12px; font-weight: 700; color: var(--green); font-variant-numeric: tabular-nums; }
@@ -2301,6 +2373,18 @@ body {
         Obtenez votre clé sur <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a>
       </div>
 
+      <div class="field-label" style="margin-top:12px">🧭 Jeton Vibe Prospecting (Explorium)</div>
+      <div class="key-input-row">
+        <input class="key-input" type="password" id="explorium-token-input" placeholder="Jeton API Explorium (optionnel)" autocomplete="off" />
+      </div>
+      <div class="key-hint">
+        Active la recherche via Vibe Prospecting / Explorium (données B2B réelles, consomme des crédits). Laisser vide = moteur web_search actuel.
+        <label style="display:flex;align-items:center;gap:6px;margin-top:6px;cursor:pointer">
+          <input type="checkbox" id="explorium-enabled" style="width:auto;margin:0" />
+          <span>Utiliser Explorium comme moteur de recherche</span>
+        </label>
+      </div>
+
       <div class="field-label" style="margin-top:12px">💶 Budget IA mensuel (€)</div>
       <div class="key-input-row">
         <input class="key-input" type="number" id="api-budget-input" placeholder="350" min="1" step="10" style="font-family:'Inter',sans-serif" />
@@ -2414,6 +2498,10 @@ body {
         <button class="dock-item" id="tab-crm" onclick="switchTab('crm')" aria-label="CRM Manuel">
           <span class="dock-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
           <span class="dock-label">CRM Manuel</span>
+        </button>
+        <button class="dock-item" id="tab-carte" onclick="switchTab('carte')" aria-label="Carte de visite">
+          <span class="dock-icon"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="8" cy="15" r="1.6"/><path d="M13 14h5M13 17h3"/></svg></span>
+          <span class="dock-label">Carte de visite</span>
         </button>
         <button class="dock-item" id="tab-outreach" onclick="switchTab('outreach')" aria-label="Séquences Outreach">
           <span class="dock-icon"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></span>
@@ -2560,6 +2648,7 @@ body {
           </div>
           <div class="api-gauge-track"><div class="api-gauge-fill"></div></div>
         </div>
+        <div id="engine-switch-co"></div>
         <div class="search-card">
           <div class="search-row">
             <span class="search-icon">🔍</span>
@@ -2571,6 +2660,15 @@ body {
               <span id="btn-icon">⚡</span>
               <span id="btn-text">Rechercher</span>
             </button>
+          </div>
+          <div class="company-geo">
+            <div class="role-target-lbl">📍 Localisation <span class="role-target-hint">(optionnel — affine / désambiguïse la recherche)</span></div>
+            <div class="company-geo-row">
+              <input class="geo-field" id="company-city" type="text" placeholder="Ville (si connue)" autocomplete="off"
+                onkeydown="if(event.key==='Enter') doSearch()" />
+              <select class="geo-field" id="company-region" onchange="onCompanyRegionChange()"><option value="">Région…</option></select>
+              <select class="geo-field" id="company-dept"><option value="">Département…</option></select>
+            </div>
           </div>
           <div class="role-target">
             <div class="role-target-lbl">🎯 Cibler les contacts <span class="role-target-hint">(optionnel — tous par défaut)</span></div>
@@ -2618,6 +2716,7 @@ body {
           </div>
           <div class="api-gauge-track"><div class="api-gauge-fill"></div></div>
         </div>
+        <div id="engine-switch-t"></div>
 
         <div class="territory-card">
           <!-- Région + taille -->
@@ -2765,11 +2864,32 @@ body {
 
 
     <!-- PANEL 4 : CRM MANUEL -->
+    <div class="tab-panel" id="panel-carte">
+      <div class="search-section">
+        <h1 class="search-heading">📇 Carte de <span>visite</span></h1>
+        <p class="search-desc">Photographiez une carte de visite ou un document. L'IA extrait les informations et les ajoute au CRM.</p>
+        <div class="search-card">
+          <div id="card-capture">
+            <div class="card-zones" id="card-zones"></div>
+            <button class="btn-search" id="card-analyze-btn" onclick="analyzeCard()" disabled style="width:100%;justify-content:center;margin-top:16px">
+              <span id="card-analyze-icon">📸</span><span id="card-analyze-text">Analyser la carte</span>
+            </button>
+            <div class="card-hint">📷 Sur mobile, le bouton ouvre l'appareil photo. Sur PC, il ouvre vos fichiers. Le verso est optionnel mais conseillé.</div>
+          </div>
+          <input type="file" id="card-recto-input" accept="image/*" capture="environment" hidden onchange="handleCardImage(this,'recto')" />
+          <input type="file" id="card-verso-input" accept="image/*" capture="environment" hidden onchange="handleCardImage(this,'verso')" />
+          <div id="card-result"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="tab-panel" id="panel-crm">
       <div class="crm-layout">
         <div class="crm-form-col">
           <div class="crm-form-card">
             <div class="crm-form-title" id="crm-form-title">Nouveau prospect</div>
+            <button type="button" class="crm-import-btn" onclick="triggerCrmImport()">📥 Importer un fichier Excel / CSV</button>
+            <input type="file" id="crm-import-input" accept=".xlsx,.xls,.csv" hidden onchange="handleImportFile(this)" />
             <div class="crm-section-label">Informations obligatoires</div>
             <div class="crm-field">
               <label class="crm-label">Nom de l'entreprise <span class="crm-req">*</span></label>
@@ -2825,6 +2945,10 @@ body {
                 <label class="crm-label">Email</label>
                 <input class="crm-input" id="crm-email" type="email" placeholder="jean@entreprise.fr" />
               </div>
+            </div>
+            <div class="crm-field">
+              <label class="crm-label">LinkedIn</label>
+              <input class="crm-input" id="crm-linkedin" type="text" placeholder="linkedin.com/in/jean-dupont" />
             </div>
             <div class="crm-field">
               <label class="crm-label">Statut prospect</label>
@@ -3101,6 +3225,9 @@ body {
         </div>
         <div class="mkt-modal-body">
           <div class="crm-section-label">📇 Pré-remplir depuis le CRM</div>
+          <div class="crm-field" style="margin-bottom:8px">
+            <input class="crm-input" id="dl-crm-search" type="text" placeholder="🔍 Rechercher une entreprise du CRM…" oninput="populateDealCrmSelectors(this.value)" autocomplete="off" />
+          </div>
           <div class="crm-field-row">
             <div class="crm-field">
               <label class="crm-label">Entreprise (CRM)</label>
@@ -3908,7 +4035,7 @@ function showApp() {
 function isDirector() { return localStorage.getItem('ast_role') === 'director'; }
 
 function applyRoleLayout(role) {
-  const commercialTabs = ['tab-company','tab-territory','tab-map','tab-crm','tab-outreach','tab-pipeline'];
+  const commercialTabs = ['tab-company','tab-territory','tab-map','tab-crm','tab-carte','tab-outreach','tab-pipeline'];
   const marketingTabs  = ['tab-campaigns','tab-fiches','tab-samples'];
   if (role === 'marketing') {
     commercialTabs.forEach(id => { const el=document.getElementById(id); if(el) el.style.display='none'; });
@@ -4056,6 +4183,8 @@ async function doSearch() {
   addHistory(name);
   const btn = document.getElementById('search-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Recherche…'; }
+  const _exMode = useExplorium();
+  _searchAbort = new AbortController();
   document.getElementById('results-zone').innerHTML = `
     <div class="search-loading">
       <div class="ast-loader">
@@ -4063,17 +4192,32 @@ async function doSearch() {
           <path d="M50 3 C53 38 62 47 97 50 C62 53 53 62 50 97 C47 62 38 53 3 50 C38 47 47 38 50 3 Z" fill="var(--navy)"/>
         </svg>
       </div>
-      <div class="spinner-label" id="search-spinner-label">Recherche approfondie en cours…</div>
-      <div class="spinner-sublabel">L'IA interroge plusieurs sources (site officiel, LinkedIn, annuaires pro…) et recoupe les informations. Cela peut prendre 30 à 60 secondes — merci de patienter.</div>
+      <div class="spinner-label" id="search-spinner-label">${_exMode ? 'Interrogation de Vibe Prospecting (Explorium)…' : 'Recherche approfondie en cours…'}</div>
+      <div class="spinner-sublabel">${_exMode ? 'Chaîne Explorium en cours (autocomplete → entreprises → décideurs). Cela peut prendre jusqu\'à quelques minutes — merci de patienter. Un message clair s\'affichera en cas de souci.' : "L'IA interroge plusieurs sources (site officiel, LinkedIn, annuaires pro…) et recoupe les informations. Cela peut prendre 30 à 60 secondes — merci de patienter."}</div>
+      <button class="search-cancel-btn" onclick="cancelSearch()">Annuler la recherche</button>
     </div>`;
   try {
     const roles = getSelectedRoles('company-role-chips');
-    const data = await callProspecting(name, roles);
+    _lastSearchRoles = roles;
+    const geo = getCompanyGeo();
+    const sig = _searchAbort.signal;
+    let data;
+    if (useExplorium()) {
+      _lastExploriumCtx = { kind:'company', name, roles, geo };
+      data = await callProspectingExplorium(name, roles, false, geo, sig);
+    } else {
+      data = await callProspecting(name, roles, geo, sig);
+    }
     setProgress(4);
     renderResults(data);
   } catch(e) {
-    document.getElementById('results-zone').innerHTML = `<div class="search-empty"><div class="empty-icon">⚠️</div><div class="empty-title">Erreur</div><div class="empty-sub">${e.message}</div></div>`;
+    if (e && e.message === '__CANCELLED__') {
+      document.getElementById('results-zone').innerHTML = `<div class="search-empty"><div class="empty-icon">🛑</div><div class="empty-title">Recherche annulée</div><div class="empty-sub">Tu as repris la main. Relance quand tu veux.</div></div>`;
+    } else {
+      document.getElementById('results-zone').innerHTML = `<div class="search-empty"><div class="empty-icon">⚠️</div><div class="empty-title">Erreur</div><div class="empty-sub">${e.message}</div></div>`;
+    }
   } finally {
+    _searchAbort = null;
     if (btn) { btn.disabled = false; btn.textContent = '🔍 Rechercher'; }
   }
 }
@@ -4089,6 +4233,8 @@ async function doTerritorySearch() {
   const btn = document.getElementById('territory-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Recherche…'; }
   const regionLabel = geo.type === 'all' ? 'toute la France' : geo.label;
+  const _exMode = useExplorium();
+  _searchAbort = new AbortController();
   document.getElementById('results-zone-t').innerHTML = `
     <div class="search-loading">
       <div class="ast-loader">
@@ -4096,17 +4242,31 @@ async function doTerritorySearch() {
           <path d="M50 3 C53 38 62 47 97 50 C62 53 53 62 50 97 C47 62 38 53 3 50 C38 47 47 38 50 3 Z" fill="var(--navy)"/>
         </svg>
       </div>
-      <div class="spinner-label" id="tsearch-spinner-label">Recherche en <strong>${regionLabel}</strong> · <strong>${sectors.join(', ')}</strong>…</div>
-      <div class="spinner-sublabel">L'IA recherche des entreprises réelles et leurs décideurs, puis recoupe les sources. Cela peut prendre 30 à 60 secondes — merci de patienter.</div>
+      <div class="spinner-label" id="tsearch-spinner-label">${_exMode ? 'Explorium' : 'Recherche'} en <strong>${regionLabel}</strong> · <strong>${sectors.join(', ')}</strong>…</div>
+      <div class="spinner-sublabel">${_exMode ? 'Chaîne Vibe Prospecting en cours (département entier + décideurs). Cela peut prendre jusqu\'à quelques minutes — merci de patienter. Un message clair s\'affichera en cas de souci.' : "L'IA recherche des entreprises réelles et leurs décideurs, puis recoupe les sources. Cela peut prendre 30 à 60 secondes — merci de patienter."}</div>
+      <button class="search-cancel-btn" onclick="cancelSearch()">Annuler la recherche</button>
     </div>`;
   try {
     const roles = getSelectedRoles('territory-role-chips');
-    const data = await callTerritoryProspecting(geo, sectors, size, roles);
+    _lastSearchRoles = roles;
+    const sig = _searchAbort.signal;
+    let data;
+    if (useExplorium()) {
+      _lastExploriumCtx = { kind:'territory', geo, sectors, size, roles };
+      data = await callTerritoryProspectingExplorium(geo, sectors, size, roles, false, sig);
+    } else {
+      data = await callTerritoryProspecting(geo, sectors, size, roles, sig);
+    }
     setProgressT(4);
     renderTerritoryResults(data);
   } catch(e) {
-    document.getElementById('results-zone-t').innerHTML = `<div class="search-empty"><div class="empty-icon">⚠️</div><div class="empty-title">Erreur</div><div class="empty-sub">${e.message}</div></div>`;
+    if (e && e.message === '__CANCELLED__') {
+      document.getElementById('results-zone-t').innerHTML = `<div class="search-empty"><div class="empty-icon">🛑</div><div class="empty-title">Recherche annulée</div><div class="empty-sub">Tu as repris la main. Relance quand tu veux.</div></div>`;
+    } else {
+      document.getElementById('results-zone-t').innerHTML = `<div class="search-empty"><div class="empty-icon">⚠️</div><div class="empty-title">Erreur</div><div class="empty-sub">${e.message}</div></div>`;
+    }
   } finally {
+    _searchAbort = null;
     if (btn) { btn.disabled = false; btn.textContent = '🔍 Rechercher'; }
   }
 }
@@ -4115,12 +4275,391 @@ async function doTerritorySearch() {
 const AI_MODEL_SEARCH = 'claude-opus-4-8';   // recherche / qualification / scoring : le plus performant (Opus 4.8)
 const AI_MODEL_FAST   = 'claude-sonnet-4-6';  // features légères / micro-tâches fréquentes (actus, analyses courtes)
 
-async function callProspecting(companyName, roles) {
+// ── VIBE PROSPECTING / EXPLORIUM (connecteur MCP, exécution serveur Anthropic) ──
+const EXPLORIUM_MCP_URL  = 'https://vibeprospecting.explorium.ai/mcp';
+const EXPLORIUM_MCP_NAME = 'vibe_prospecting';
+const EXPLORIUM_MCP_BETA = 'mcp-client-2025-11-20';
+
+// Message d'erreur API lisible — distingue clairement un solde Anthropic épuisé
+// (clé Claude) d'un souci Explorium. Utilisé par les 3 moteurs de recherche.
+function _apiErr(status, rawMsg) {
+  const low = String(rawMsg || '').toLowerCase();
+  if (/credit balance|too low|billing|insufficient|plans & billing|payment/.test(low))
+    return "💳 Ta clé API Anthropic (Claude) n'a plus de crédit — recharge-la sur console.anthropic.com/settings/billing. (Ce n'est PAS Explorium : tes crédits Explorium ne sont consommés qu'à la révélation.)";
+  if (status === 401) return "Clé API Anthropic invalide ou expirée — vérifie-la dans les paramètres admin.";
+  if (status === 429) return 'Trop de requêtes — réessaie dans 30 secondes.';
+  return rawMsg || ('Erreur API ' + status);
+}
+
+// fetch avec timeout (AbortController) + annulation utilisateur. Lève '__CANCELLED__' si annulé.
+async function _timedFetch(url, opts, userSignal, timeoutMs) {
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), timeoutMs);
+  if (userSignal) userSignal.addEventListener('abort', () => ctrl.abort(), { once: true });
+  try {
+    return await fetch(url, Object.assign({}, opts, { signal: ctrl.signal }));
+  } catch (e) {
+    if (userSignal && userSignal.aborted) throw new Error('__CANCELLED__');
+    if (e && e.name === 'AbortError') throw new Error(`La recherche n'a pas répondu en ${Math.round(timeoutMs / 1000)} s. Réessaie, ou affine ta cible (nom / zone plus précis).`);
+    throw new Error('Erreur réseau vers Anthropic : ' + ((e && e.message) || e));
+  } finally { clearTimeout(to); }
+}
+const SEARCH_TIMEOUT_MS = 300000;  // 5 min par appel, moteurs web
+
+function getExploriumToken() { return (localStorage.getItem('ast_explorium_token') || '').trim(); }
+// Interrupteur : Explorium n'est le moteur QUE si activé ET jeton présent — sinon web_search.
+function useExplorium() {
+  return localStorage.getItem('ast_search_engine') === 'explorium' && !!getExploriumToken();
+}
+
+// Contexte de la dernière recherche Explorium (pour la révélation payante).
+let _lastExploriumCtx = null;
+// Pôles cochés lors de la dernière recherche (priorisation des résultats).
+let _lastSearchRoles = [];
+// Contrôleur d'annulation de la recherche en cours (bouton « Annuler »).
+let _searchAbort = null;
+function cancelSearch() { if (_searchAbort) _searchAbort.abort(); }
+
+// Bannière d'aperçu masqué + bouton de révélation (affichée quand reveal_required).
+function _revealBanner(data) {
+  if (!data || !data.reveal_required) return '';
+  const c = Number(data.estimated_credits);
+  const cost = (!isNaN(c) && c > 0) ? `~${c} crédit${c > 1 ? 's' : ''}` : 'crédits Explorium';
+  return `<div id="explorium-reveal-banner" class="reveal-banner">
+    <div class="reveal-txt">🔒 <b>Aperçu Explorium</b> — décideurs, firmographie et signaux ci-dessous. Les coordonnées (email · tél · LinkedIn) sont masquées jusqu'à la révélation.</div>
+    <button class="reveal-btn" onclick="revealExploriumCoordinates()">🔓 Révéler les coordonnées (${cost})</button>
+  </div>`;
+}
+
+// Relance la dernière recherche Explorium en MODE RÉVÉLATION (consomme des crédits).
+// Compte les contacts dont au moins une coordonnée réelle a été renvoyée.
+function _revealedCount(data) {
+  let contacts = [];
+  if (data && Array.isArray(data.contacts)) contacts = data.contacts;
+  else if (data && Array.isArray(data.companies)) contacts = data.companies.flatMap(c => c.contacts || []);
+  const ok = v => v && String(v).toLowerCase() !== 'null';
+  const revealed = contacts.filter(p => ok(p.email) || ok(p.phone) || ok(p.linkedin)).length;
+  return { total: contacts.length, revealed };
+}
+// Bandeau d'avertissement si l'export a été facturé mais aucune coordonnée n'est revenue.
+function _showRevealWarning(kind, note) {
+  const zone = document.getElementById(kind === 'company' ? 'results-zone' : 'results-zone-t');
+  if (!zone) return;
+  const warn = document.createElement('div');
+  warn.className = 'reveal-banner';
+  warn.style.background = '#fef2f2'; warn.style.borderColor = '#fca5a5';
+  warn.innerHTML = `<div class="reveal-txt" style="color:#991b1b">⚠️ <b>Export Explorium facturé, mais aucune coordonnée n'est revenue dans l'app.</b> Les décideurs sont là, mais emails / téléphones / LinkedIn sont vides${note ? ` — <i>${_esc0(note)}</i>` : ''}. Copie-moi ce message : c'est un point à régler côté chaîne Explorium (l'export produit un fichier au lieu de réinjecter les lignes).</div>`;
+  zone.insertBefore(warn, zone.firstChild);
+}
+
+async function revealExploriumCoordinates() {
+  if (!_lastExploriumCtx) return;
+  const ctx = _lastExploriumCtx;
+  const banner = document.getElementById('explorium-reveal-banner');
+  if (banner) banner.innerHTML = '<div class="reveal-txt">🔓 Révélation en cours… (peut prendre quelques minutes — consommation des crédits Explorium)</div>';
+  try {
+    let data;
+    if (ctx.kind === 'company') { data = await callProspectingExplorium(ctx.name, ctx.roles, true, ctx.geo); renderResults(data); }
+    else { data = await callTerritoryProspectingExplorium(ctx.geo, ctx.sectors, ctx.size, ctx.roles, true); renderTerritoryResults(data); }
+    // Contrôle : la révélation a-t-elle réellement ramené des coordonnées ?
+    const c = _revealedCount(data);
+    if (c.total > 0 && c.revealed === 0) _showRevealWarning(ctx.kind, data && data.reveal_note);
+  } catch (e) {
+    if (e && e.message === '__CANCELLED__') return;
+    const b = document.getElementById('explorium-reveal-banner');
+    if (b) b.innerHTML = `<div class="reveal-txt" style="color:#b91c1c">⚠️ ${e.message}</div>`;
+  }
+}
+
+// Sélecteur de moteur affiché sur les écrans de recherche (entreprise + territoire).
+function renderEngineSwitch() {
+  const tok = getExploriumToken();
+  const intent = localStorage.getItem('ast_search_engine') === 'explorium';
+  const active = intent && !!tok;   // vraiment routé vers Explorium
+  const html = `<div class="engine-switch">
+    <span class="engine-lbl">Moteur de recherche :</span>
+    <button class="engine-opt ${!intent ? 'active' : ''}" onclick="setSearchEngine('web')">🌐 Recherche web</button>
+    <button class="engine-opt ${intent ? 'active' : ''}" onclick="setSearchEngine('explorium')">🧭 Explorium${tok ? '' : ' 🔒'}</button>
+    ${active ? '<span class="engine-badge-on">✅ actif — données Explorium</span>' : ''}
+    ${intent && !tok ? `<span class="engine-hint">colle ton jeton →</span><input id="engine-token-inline" class="engine-token" type="password" placeholder="Jeton Explorium" autocomplete="off" onchange="saveInlineExploriumToken(this.value)" onkeydown="if(event.key==='Enter'){saveInlineExploriumToken(this.value);}" />` : ''}
+  </div>`;
+  ['engine-switch-co', 'engine-switch-t'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = html; });
+}
+function setSearchEngine(mode) {
+  localStorage.setItem('ast_search_engine', mode === 'explorium' ? 'explorium' : 'web');
+  renderEngineSwitch();
+  if (mode === 'explorium' && !getExploriumToken()) {
+    const inp = document.getElementById('engine-token-inline'); if (inp) inp.focus();
+  }
+}
+function saveInlineExploriumToken(v) {
+  v = (v || '').trim();
+  if (v) { localStorage.setItem('ast_explorium_token', v); localStorage.setItem('ast_search_engine', 'explorium'); }
+  renderEngineSwitch();
+}
+
+// Extraction tolérante du JSON final depuis un bloc texte (répare les accolades/crochets).
+function _extractJsonObject(raw) {
+  const clean = String(raw || '').replace(/```json\s?/g, '').replace(/```\s?/g, '').trim();
+  const m = clean.match(/\{[\s\S]*\}/);
+  if (!m) return null;
+  try { return JSON.parse(m[0]); }
+  catch (e) {
+    let fixed = m[0];
+    const opens = (fixed.match(/\[/g) || []).length - (fixed.match(/\]/g) || []).length;
+    const openB = (fixed.match(/\{/g) || []).length - (fixed.match(/\}/g) || []).length;
+    const lastClose = Math.max(fixed.lastIndexOf('}'), fixed.lastIndexOf(']'));
+    if (lastClose > 0) fixed = fixed.slice(0, lastClose + 1);
+    for (let i = 0; i < openB; i++) fixed += '}';
+    for (let i = 0; i < opens; i++) fixed += ']';
+    try { return JSON.parse(fixed); } catch (e2) { return null; }
+  }
+}
+
+// Appel Anthropic + connecteur MCP Explorium, EN STREAMING. La connexion reste vivante
+// pendant que la chaîne Explorium tourne côté serveur (fini les coupures « timeout »).
+// Watchdog d'INACTIVITÉ : on ne coupe que si AUCUNE donnée n'arrive pendant IDLE_TIMEOUT
+// (vrai blocage), pas sur le temps total. Gère pause_turn (relance) + JSON final.
+async function callExploriumMCP(systemPrompt, userPrompt, userSignal) {
+  const apiKey  = localStorage.getItem('ast_api_key');
+  const exToken = getExploriumToken();
+  if (!exToken) throw new Error('Jeton Explorium manquant — configurez-le dans les paramètres admin.');
+
+  let messages = [{ role: 'user', content: userPrompt }];
+  const MAX_ATTEMPTS = 6;           // la chaîne Explorium enchaîne plusieurs outils
+  const IDLE_TIMEOUT = 180000;      // coupe UNIQUEMENT si 3 min sans le moindre octet reçu
+  const WALL_CLOCK_MS = 1200000;    // garde-fou absolu : 20 min max au total
+  const _startedAt = Date.now();
+  let attempts = 0;
+
+  while (attempts < MAX_ATTEMPTS) {
+    attempts++;
+    const forceAnswer = attempts >= MAX_ATTEMPTS; // dernier tour : on force la synthèse JSON
+
+    if (userSignal && userSignal.aborted) throw new Error('__CANCELLED__');
+    if (Date.now() - _startedAt > WALL_CLOCK_MS) {
+      throw new Error("Explorium met vraiment trop de temps (>20 min). Affine ta cible ou réessaie ; si ça persiste, dis-le-moi et j'allègerai la chaîne (moins d'entreprises/décideurs par lot).");
+    }
+
+    const body = {
+      model: AI_MODEL_SEARCH,
+      max_tokens: 12000,
+      stream: true,
+      cache_control: { type: 'ephemeral' },
+      system: systemPrompt,
+      messages,
+      mcp_servers: [{ type: 'url', url: EXPLORIUM_MCP_URL, name: EXPLORIUM_MCP_NAME, authorization_token: exToken }],
+      tools: [{ type: 'mcp_toolset', mcp_server_name: EXPLORIUM_MCP_NAME }]
+    };
+    if (forceAnswer) body.tool_choice = { type: 'none' };
+
+    const ctrl = new AbortController();
+    let idleTimer;
+    const resetIdle = () => { clearTimeout(idleTimer); idleTimer = setTimeout(() => ctrl.abort(), IDLE_TIMEOUT); };
+    if (userSignal) userSignal.addEventListener('abort', () => ctrl.abort(), { once: true });
+
+    let resp;
+    resetIdle();
+    try {
+      resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-beta': EXPLORIUM_MCP_BETA,
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify(body),
+        signal: ctrl.signal
+      });
+    } catch (netErr) {
+      clearTimeout(idleTimer);
+      if (userSignal && userSignal.aborted) throw new Error('__CANCELLED__');
+      if (netErr && netErr.name === 'AbortError') throw new Error("Explorium n'a envoyé aucune donnée pendant 3 min — la connexion est bloquée. Réessaie ; si ça persiste, dis-le-moi.");
+      throw new Error('Erreur réseau vers Anthropic/Explorium : ' + ((netErr && netErr.message) || netErr));
+    }
+    if (!resp.ok) {
+      clearTimeout(idleTimer);
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(_apiErr(resp.status, (err.error && err.error.message)));
+    }
+
+    // ── Lecture du flux SSE : on reconstruit les blocs de contenu + stop_reason ──
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    const blocks = [];   // indexé par content_block index
+    let stopReason = null, usage = null, streamErrMsg = null;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        resetIdle();  // des octets arrivent → la connexion est vivante
+        buf += decoder.decode(value, { stream: true });
+        let sep;
+        while ((sep = buf.indexOf('\n\n')) >= 0) {
+          const rawEvent = buf.slice(0, sep); buf = buf.slice(sep + 2);
+          const dataLine = rawEvent.split('\n').find(l => l.startsWith('data:'));
+          if (!dataLine) continue;
+          const js = dataLine.slice(5).trim();
+          if (!js || js === '[DONE]') continue;
+          let ev; try { ev = JSON.parse(js); } catch (_) { continue; }
+          if (ev.type === 'message_start') { if (ev.message && ev.message.usage) usage = ev.message.usage; }
+          else if (ev.type === 'content_block_start') { const b = Object.assign({}, ev.content_block); if (b.type === 'text' && b.text == null) b.text = ''; blocks[ev.index] = b; }
+          else if (ev.type === 'content_block_delta') {
+            const b = blocks[ev.index]; if (!b) continue;
+            if (ev.delta.type === 'text_delta') b.text = (b.text || '') + ev.delta.text;
+            else if (ev.delta.type === 'input_json_delta') b._pj = (b._pj || '') + (ev.delta.partial_json || '');
+          }
+          else if (ev.type === 'content_block_stop') { const b = blocks[ev.index]; if (b && b._pj !== undefined) { try { b.input = JSON.parse(b._pj); } catch (_) {} delete b._pj; } }
+          else if (ev.type === 'message_delta') { if (ev.delta && ev.delta.stop_reason) stopReason = ev.delta.stop_reason; if (ev.usage) usage = Object.assign({}, usage, ev.usage); }
+          else if (ev.type === 'error') { streamErrMsg = (ev.error && ev.error.message) || 'Erreur streaming Anthropic'; }
+        }
+      }
+    } catch (streamErr) {
+      clearTimeout(idleTimer);
+      if (userSignal && userSignal.aborted) throw new Error('__CANCELLED__');
+      if (streamErr && streamErr.name === 'AbortError') throw new Error("Explorium n'a envoyé aucune donnée pendant 3 min — la connexion est bloquée. Réessaie ; si ça persiste, dis-le-moi.");
+      throw streamErr;
+    }
+    clearTimeout(idleTimer);
+    if (streamErrMsg) throw new Error(_apiErr(0, streamErrMsg));
+    if (usage) trackApiUsage(usage);
+
+    const content = blocks.filter(Boolean);
+
+    // pause_turn (cap d'itérations serveur atteint) → on relance en renvoyant le contenu.
+    if (!forceAnswer && stopReason === 'pause_turn') { messages.push({ role: 'assistant', content }); continue; }
+
+    // JSON final dans les blocs texte.
+    const text = content.filter(b => b.type === 'text').map(b => b.text).join('');
+    if (text.trim()) {
+      const parsed = _extractJsonObject(text);
+      if (parsed) return parsed;
+      throw new Error('Réponse Explorium mal formatée — réessaie.');
+    }
+    if (forceAnswer) break;
+    messages.push({ role: 'assistant', content }); // stop inattendu sans texte → on relance
+  }
+  throw new Error('Explorium : impossible de récupérer les résultats. Élargis les filtres ou réessaie.');
+}
+
+// Socle de prompt commun à la chaîne Explorium (ciblage Astéria + fiabilité + RGPD).
+function _exploriumBase(roleInstruction, reveal) {
+  const modeInstr = reveal
+    ? `MODE RÉVÉLATION (PAYANT — l'utilisateur a confirmé la dépense de crédits) :
+- OBJECTIF : renvoyer dans le JSON les VRAIES coordonnées (email, téléphone, linkedin) des décideurs — PAS produire un fichier.
+- Procédure : enrich-prospects (enrichments=["enrich-prospects-contacts"], contact_types=["email","phone"]) sur les décideurs cibles. Si l'aperçu reste MASQUÉ, appelle export-to-csv PUIS get-dataset et LIS les lignes réelles dé-masquées.
+- RECOPIE ensuite ces valeurs réelles (email, téléphone, linkedin) dans le champ correspondant de chaque contact du JSON. Puisque l'utilisateur a PAYÉ, une coordonnée qu'Explorium possède NE DOIT PAS rester null.
+- N'invente JAMAIS : si une valeur est réellement absente après export + get-dataset, mets null (confidence "not_found").
+- Si tu ne parviens PAS à lire les coordonnées dé-masquées (l'outil ne renvoie pas les lignes dans ta réponse), explique-le en UNE phrase dans le champ "reveal_note".
+- Mets "reveal_required": false.`
+    : `MODE APERÇU (GRATUIT) :
+- Exécute autocomplete → fetch-entities-statistics → fetch-entities → enrich-business / enrich-prospects en restant sur l'APERÇU.
+- NE lance PAS export-to-csv. Les coordonnées (email, téléphone, linkedin) restent MASQUÉES → mets-les à null.
+- Appelle estimate-cost pour chiffrer la révélation complète.
+- Mets "reveal_required": true et "estimated_credits": <nombre entier de crédits>.`;
+  return `Tu es un analyste commercial B2B senior qui pilote Vibe Prospecting (Explorium) pour Astéria France, fabricant d'étiquettes adhésives sur mesure.
+
+═══ CHAÎNE D'OUTILS EXPLORIUM (dans cet ordre, enchaîne les appels) ═══
+1. autocomplete — normalise industries, intitulés de postes et localisations AVANT toute recherche (jamais de requête vide).
+2. fetch-entities-statistics — mesure la taille du marché cible avant de consommer des crédits.
+3. match-business / fetch-entities — identifie les entreprises et récupère le MAXIMUM de décideurs pertinents (variantes de postes, segmentation si >1000).
+4. enrich-business — firmographie, technographie, financements, signaux.
+5. enrich-prospects — coordonnées (selon le mode ci-dessous), rôles, profils.
+6. fetch-businesses-events + fetch-prospects-events — signaux d'achat datés et sourcés.
+Exploite la lazy evaluation : échantillon qualifié d'abord, élargissement ensuite. Un SEUL endpoint MCP : Vibe Prospecting.
+
+${modeInstr}
+
+═══ CONTEXTE ASTÉRIA (étiquettes adhésives) ═══
+- Secteurs à forte valeur : agroalimentaire, cosmétique, pharma, vins & spiritueux, chimie, industrie, logistique.
+- Signaux pertinents : nouveau produit/lancement, refonte packaging, conformité étiquetage (INCO/réglementaire), ouverture/agrandissement de site, recrutement production/qualité/achats.
+- REPLI CONTACT (important) : renseigne TOUJOURS le "phone" (standard/accueil) et le "email" (général/accueil, ex. contact@) de l'objet "company" s'ils sont publics. Ils servent de repli : quand la ligne directe ou l'email direct d'un décideur est introuvable, le commercial appellera le standard et demandera la personne par son nom.
+
+${roleInstruction}
+
+═══ FIABILITÉ ABSOLUE (priorité sur tout) ═══
+- Ne JAMAIS inventer email, téléphone, nom ou URL. Toute donnée non renvoyée par Explorium = null. N'infère JAMAIS une URL LinkedIn à partir d'un nom.
+- Chaque coordonnée porte "confidence" : "verified" (renvoyée par Explorium) | "not_found" (→ valeur null). "source" = "explorium".
+- RGPD : uniquement données professionnelles B2B ; finalité prospection ; aucun contournement de protections.
+
+Réponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans texte autour.`;
+}
+
+// Recherche par territoire via Explorium — même forme de sortie que callTerritoryProspecting.
+async function callTerritoryProspectingExplorium(geo, sectors, size, roles, reveal, userSignal) {
+  const g = (geo && typeof geo === 'object') ? geo : { type: geo ? 'region' : 'all', value: geo || '', label: geo || '', region: '' };
+  const regionStr = (g.type === 'all') ? 'toute la France' : g.label;
+  const sizeStr = size || 'toutes tailles';
+  const sys = _exploriumBase(buildRoleInstruction(roles), reveal) + `
+
+Schéma de sortie :
+{
+  "search": {"region": "${regionStr}", "sectors": ${JSON.stringify(sectors)}, "size": "${sizeStr}"},
+  "reveal_required": true,
+  "estimated_credits": 0,
+  "reveal_note": "vide en mode aperçu ; en révélation, explication SI les coordonnées n'ont pas pu être dé-masquées",
+  "companies": [
+    {
+      "name": "...", "domain": "... ou null", "industry": "...", "employees": "... ou null",
+      "location": "Ville, ${regionStr}", "description": "...",
+      "phone": "standard ou null", "email": "email public ou null",
+      "phone_confidence": "verified | not_found", "email_confidence": "verified | not_found",
+      "fit_score": 0, "priority": "chaud | tiède | froid",
+      "buying_signals": ["signal daté"], "approach": "angle en 1 phrase",
+      "company_linkedin": "linkedin.com/company/... réellement renvoyé, sinon null",
+      "sources": ["explorium"],
+      "contacts": [
+        {"name":"...", "title":"...", "department":"Achats|Marketing|Direction|Production|Qualité",
+         "email": null, "phone": null, "linkedin": null,
+         "confidence":"verified | not_found", "source":"explorium"}
+      ]
+    }
+  ]
+}
+Cible ${regionStr}, secteurs ${sectors.join(', ')}, taille ${sizeStr}. JSON complet et bien fermé.`;
+  const userPrompt = `Trouve des prospects Astéria (étiquettes adhésives) — région/zone : ${regionStr}, secteurs : ${sectors.join(', ')}, taille : ${sizeStr}.`;
+  return callExploriumMCP(sys, userPrompt, userSignal);
+}
+
+// Recherche par entreprise via Explorium — même forme que callProspecting.
+async function callProspectingExplorium(companyName, roles, reveal, geo, userSignal) {
+  const sys = _exploriumBase(buildRoleInstruction(roles), reveal) + _geoInstr(geo) + `
+
+Schéma de sortie :
+{
+  "reveal_required": true,
+  "estimated_credits": 0,
+  "reveal_note": "vide en mode aperçu ; en révélation, explication SI les coordonnées n'ont pas pu être dé-masquées",
+  "company": {
+    "name":"...", "domain":"... ou null", "industry":"...", "employees":"... ou null",
+    "location":"Ville, Région", "description":"...",
+    "phone":"standard ou null", "email":"email public ou null",
+    "phone_confidence":"verified | not_found", "email_confidence":"verified | not_found",
+    "fit_score":0, "priority":"chaud | tiède | froid",
+    "buying_signals":["signal daté"], "approach":"angle en 1 phrase",
+    "company_linkedin":"linkedin.com/company/... réellement renvoyé, sinon null",
+    "sources":["explorium"]
+  },
+  "contacts": [
+    {"name":"...", "title":"...", "department":"Achats|Direction|Marketing|Production|Qualité",
+     "email": null, "phone": null, "linkedin": null,
+     "confidence":"verified | not_found", "source":"explorium"}
+  ]
+}
+Entreprise cible : "${companyName}". 4 à 10 décideurs pertinents. JSON complet et bien fermé.`;
+  const userPrompt = `Qualifie l'entreprise "${companyName}"${geo ? ` — zone : ${_geoLabel(geo)}` : ''} et ses décideurs pour Astéria (étiquettes adhésives).`;
+  return callExploriumMCP(sys, userPrompt, userSignal);
+}
+
+async function callProspecting(companyName, roles, geo, userSignal) {
   const apiKey = localStorage.getItem('ast_api_key');
   const roleInstruction = buildRoleInstruction(roles);
 
   const prompt = `Tu es un analyste senior en intelligence commerciale B2B (fournisseur d'étiquettes adhésives). Ta mission : produire une fiche de prospection FIABLE et ACTIONNABLE sur l'entreprise "${companyName}", à partir de données publiques et professionnelles UNIQUEMENT.
-
+${_geoInstr(geo)}
 ═══ MÉTHODE DE RECHERCHE MULTI-SOURCES (enchaîne plusieurs recherches web, recoupe avant de conclure) ═══
 1. Site officiel → activité réelle, effectif, adresse, standard, emails de contact publiés
 2. LinkedIn (pages publiques "à propos" / "people", résultats indexés) → décideurs nommés des fonctions ciblées
@@ -4134,6 +4673,7 @@ ${roleInstruction}
 - Tu ne dois JAMAIS inventer ni deviner un email, un téléphone, un nom ou un titre. Une valeur "plausible" mais non vérifiée = INVENTÉE = INTERDITE.
 - Si une information n'est pas trouvée et recoupée de façon fiable → mets null. Un null est TOUJOURS préférable à une valeur incertaine.
 - N'infère JAMAIS un email par un schéma type "prenom.nom@domaine" : ne le mets que si tu l'as réellement vu publié.
+- N'infère, ne construis, ne complète JAMAIS une URL LinkedIn à partir d'un nom (ex: linkedin.com/in/prenom-nom) : ne mets un lien QUE si tu l'as réellement vu publié. Sinon null.
 - Chaque information clé porte un niveau de confiance : "verified" (vu et recoupé sur ≥2 sources publiques), "probable" (1 source publique fiable, non recoupé), "not_found" (absent → la valeur associée DOIT être null).
 - Cite pour chaque contact la "source" réelle (ex: "linkedin", "site-officiel", "societe.com", "pappers", "presse:<média>").
 
@@ -4161,6 +4701,7 @@ Réponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans texte autour 
     "priority": "chaud | tiède | froid",
     "buying_signals": ["signal concret et daté si possible"],
     "approach": "Angle d'approche commercial concret en 1 phrase (accroche liée au besoin étiquettes)",
+    "company_linkedin": "URL de la PAGE ENTREPRISE LinkedIn (linkedin.com/company/...) réellement vue, sinon null",
     "sources": ["nom ou URL des sources principales utilisées"]
   },
   "contacts": [
@@ -4170,7 +4711,7 @@ Réponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans texte autour 
       "department": "Achats | Direction | Marketing | Production | Qualité | ...",
       "email": "email public vérifié ou null",
       "phone": "ligne directe vérifiée ou null",
-      "linkedin": "URL LinkedIn publique vérifiée ou null",
+      "linkedin": "URL du PROFIL LinkedIn de la personne (linkedin.com/in/...) réellement vue, jamais déduite du nom, sinon null",
       "name_confidence": "verified | probable | not_found",
       "email_confidence": "verified | probable | not_found",
       "phone_confidence": "verified | probable | not_found",
@@ -4192,13 +4733,15 @@ Fournis 4 à 10 contacts, en respectant STRICTEMENT le ciblage demandé et la r�
 
     const body = {
       model: AI_MODEL_SEARCH,
-      max_tokens: 8000,
+      max_tokens: 12000,
+      cache_control: { type: 'ephemeral' },   // auto-cache (0 impact qualité)
       messages,
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 6 }]
     };
     if (forceAnswer) body.tool_choice = { type: 'none' };
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    if (userSignal && userSignal.aborted) throw new Error('__CANCELLED__');
+    const resp = await _timedFetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -4207,11 +4750,11 @@ Fournis 4 à 10 contacts, en respectant STRICTEMENT le ciblage demandé et la r�
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify(body)
-    });
+    }, userSignal, SEARCH_TIMEOUT_MS);
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Erreur API ${resp.status}`);
+      throw new Error(_apiErr(resp.status, err.error?.message));
     }
 
     const data = await resp.json();
@@ -4313,7 +4856,7 @@ function addSearchResultToCRM(payload) {
     contactTitle: p.title        || '',
     email:        contactEmail,
     phone:        contactPhone,
-    linkedin:     p.linkedin     || '',
+    linkedin:     validateLinkedInUrl(p.linkedin, 'person') || '',  // jamais un lien fabriqué/invalide
     status:       'prospect',
     notes:        co.description || '',
     createdAt:    Date.now(),
@@ -4416,6 +4959,485 @@ function _trSignalsBlock(co) {
 }
 function _esc0(s) { return String(s).replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
+// ── FIABILITÉ DES LIENS : validation stricte (ne fabrique JAMAIS d'URL) ──
+// Valide qu'une URL LinkedIn est une vraie URL linkedin.com au bon format.
+// Retourne l'URL normalisée si valide, sinon null. NE CONSTRUIT JAMAIS d'URL.
+function validateLinkedInUrl(url, type /* 'person' | 'company' */) {
+  if (!url || typeof url !== 'string') return null;
+  let u = url.trim();
+  if (!u || u.toLowerCase() === 'null') return null;
+  try {
+    if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    const parsed = new URL(u);
+    if (!/(^|\.)linkedin\.com$/i.test(parsed.hostname)) return null;
+    const path = parsed.pathname.toLowerCase();
+    if (type === 'person'  && !path.startsWith('/in/')) return null;
+    if (type === 'company' && !/^\/(company|school)\//.test(path)) return null;
+    const slug = path.replace(/^\/(in|company|school)\//, '').replace(/\/+$/, '');
+    if (!slug || slug.length < 2) return null;           // slug vide/fabriqué → rejeté
+    return parsed.href;
+  } catch (_) { return null; }
+}
+
+// Cascade d'affichage du lien LinkedIn (Tâche 1.3) :
+// 1) profil perso vérifié → "Voir LinkedIn" (✅) ; 2) sinon page société vérifiée →
+// "LinkedIn (société)" (libellé distinct) ; 3) sinon "LinkedIn non trouvé" (➖) si la
+// carte a d'autres coordonnées, sinon rien. Jamais de lien mort ou fabriqué.
+function _liCell(p, co) {
+  const person = validateLinkedInUrl(p && p.linkedin, 'person');
+  if (person) return `<div class="detail-row"><span class="detail-icon">🔗</span><a href="${person}" target="_blank" rel="noopener noreferrer">Voir LinkedIn</a><span class="conf-dot" title="vérifié">✅</span></div>`;
+  const comp = validateLinkedInUrl(co && (co.company_linkedin || co.linkedin), 'company');
+  if (comp) return `<div class="detail-row"><span class="detail-icon">🔗</span><a href="${comp}" target="_blank" rel="noopener noreferrer">LinkedIn (société)</a><span class="li-scope">page entreprise</span></div>`;
+  const hasOther = !!(_realVal(p && p.email) || _realVal(p && p.phone) || _realVal(co && co.email) || _realVal(co && co.phone));
+  if (hasOther) return `<div class="detail-row detail-muted"><span class="detail-icon">🔗</span><span class="li-absent">➖ LinkedIn non trouvé</span></div>`;
+  return '';
+}
+
+// Valeur réelle (ni vide ni "null").
+function _realVal(v) { return v && String(v).toLowerCase() !== 'null' ? v : null; }
+// Email du contact : direct du décideur, sinon email GÉNÉRAL de l'entreprise (repli, étiqueté).
+function _contactEmailRow(p, co) {
+  const direct = _realVal(p && p.email);
+  if (direct) return `<div class="detail-row"><span class="detail-icon">✉</span><a href="mailto:${direct}">${direct}</a>${_confDot(p.email_confidence)}</div>`;
+  const gen = _realVal(co && co.email);
+  if (gen) return `<div class="detail-row"><span class="detail-icon">✉</span><a href="mailto:${gen}">${gen}</a> <span class="contact-general">général</span></div>`;
+  return '';
+}
+// Téléphone du contact : ligne directe, sinon STANDARD de l'entreprise (repli, étiqueté).
+function _contactPhoneRow(p, co) {
+  const direct = _realVal(p && p.phone);
+  if (direct) return `<div class="detail-row"><span class="detail-icon">📞</span><a href="tel:${direct}">${direct}</a>${_confDot(p.phone_confidence)}</div>`;
+  const gen = _realVal(co && co.phone);
+  if (gen) return `<div class="detail-row"><span class="detail-icon">📞</span><a href="tel:${gen}">${gen}</a> <span class="contact-general">standard</span></div>`;
+  return '';
+}
+
+// ══════════════ CARTE DE VISITE (OCR IA vision → CRM) ══════════════
+let _cardImages = { recto: null, verso: null };   // { data: base64 sans préfixe, media_type }
+let _cardExtracted = null;
+
+const CARD_SIZE_OPTS   = ['TPE (1-9 salaries)','PME (10-249 salaries)','ETI (250-4999 salaries)','Grande entreprise (5000+ salaries)'];
+const CARD_SECTOR_OPTS = ['Agroalimentaire','Industrie manufacturiere','Cosmetique','Chimie','Logistique','Pharmaceutique','Technologies','BTP','Energie','Distribution','Finance','Automobile','Aeronautique','Agriculture','Luxe','Hotellerie','Autre'];
+
+const CARD_PROMPT = `Tu analyses une carte de visite professionnelle (recto et éventuellement verso) pour Astéria France, fabricant d'étiquettes adhésives.
+Extrais UNIQUEMENT les informations réellement visibles et lisibles sur l'image. RÈGLE ABSOLUE : n'invente, ne devine, ne complète JAMAIS une information. Si un champ n'est pas lisible ou absent, mets null. Ne déduis pas un email à partir d'un nom et d'un domaine. Ne reconstruis pas un numéro partiellement lisible. Ne mets "linkedin" QUE si une URL LinkedIn est effectivement imprimée sur la carte — jamais fabriquée à partir du nom.
+Si recto et verso sont fournis, croise-les (le verso contient souvent les coordonnées ou une version dans une autre langue).
+Réponds UNIQUEMENT en JSON valide, sans markdown, sans texte autour :
+{
+  "company": "Nom de l'entreprise ou null",
+  "contact_name": "Prénom Nom ou null",
+  "job_title": "Fonction exacte telle qu'écrite ou null",
+  "department": "Achats|Marketing|Production|Qualité|Supply Chain|R&D|Direction|Autre|null (déduit UNIQUEMENT depuis la fonction écrite)",
+  "email": "email exact ou null",
+  "phone": "téléphone fixe ou null",
+  "mobile": "portable ou null",
+  "website": "site web ou null",
+  "address": "adresse postale (rue) ou null",
+  "city": "ville ou null",
+  "postal_code": "code postal ou null",
+  "linkedin": "URL LinkedIn UNIQUEMENT si imprimée sur la carte, sinon null",
+  "notes": "Toute autre info utile visible (slogan, activité, certifications) ou null",
+  "confidence": "high|medium|low",
+  "unreadable_fields": ["liste des champs illisibles/incertains"]
+}
+"confidence" reflète la qualité de lecture (photo floue, reflets, texte coupé → low).`;
+
+function initCardTab() {
+  _cardImages = { recto: null, verso: null };
+  _cardExtracted = null;
+  const res = document.getElementById('card-result'); if (res) res.innerHTML = '';
+  const cap = document.getElementById('card-capture'); if (cap) cap.style.display = '';
+  renderCardZones();
+  _updateCardAnalyzeBtn();
+}
+
+function renderCardZones() {
+  const wrap = document.getElementById('card-zones'); if (!wrap) return;
+  const zone = (side, label, sub, isRecto) => {
+    const img = _cardImages[side];
+    if (img) return `<div class="card-drop filled">
+        <img class="card-thumb" src="data:${img.media_type};base64,${img.data}" alt="${label}" />
+        <button class="card-retake" onclick="retakeCard('${side}')">↺ Reprendre le ${label.toLowerCase()}</button>
+      </div>`;
+    return `<div class="card-drop" onclick="document.getElementById('card-${side}-input').click()">
+        <span class="card-drop-emoji">${isRecto ? '📇' : '🔄'}</span>
+        <span class="card-drop-label">${label}${isRecto ? '' : ' <span style="color:var(--text3);font-weight:400">(optionnel)</span>'}</span>
+        <span class="card-drop-sub">${sub}</span>
+      </div>`;
+  };
+  wrap.innerHTML = zone('recto', 'Recto', 'Appuyez pour photographier / choisir', true)
+                 + zone('verso', 'Verso', 'Souvent les coordonnées', false);
+}
+
+function retakeCard(side) {
+  _cardImages[side] = null;
+  const inp = document.getElementById('card-' + side + '-input'); if (inp) inp.value = '';
+  renderCardZones(); _updateCardAnalyzeBtn();
+}
+function _updateCardAnalyzeBtn() {
+  const btn = document.getElementById('card-analyze-btn'); if (btn) btn.disabled = !_cardImages.recto;
+}
+
+// Compresse l'image (canvas ~1500 px, JPEG 0.8) → {data, media_type}. Réutilise le pattern existant.
+function handleCardImage(input, side) {
+  const file = input.files && input.files[0]; if (!file) return;
+  if (!/^image\//.test(file.type)) { alert('Merci de choisir une image.'); input.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1500;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) { const r = Math.min(MAX / w, MAX / h); w = Math.round(w * r); h = Math.round(h * r); }
+      const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      _cardImages[side] = { data: dataUrl.split(',')[1], media_type: 'image/jpeg' };
+      renderCardZones(); _updateCardAnalyzeBtn();
+    };
+    img.onerror = () => alert('Image illisible — réessayez avec une autre photo.');
+    img.src = e.target.result;
+  };
+  reader.onerror = () => alert('Lecture du fichier impossible.');
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function _cardResultError(msg, allowRetake) {
+  const res = document.getElementById('card-result'); if (!res) return;
+  res.innerHTML = `<div class="search-empty" style="padding:28px 0">
+      <div class="empty-icon">⚠️</div>
+      <div class="empty-title">Analyse impossible</div>
+      <div class="empty-sub">${msg}</div>
+      ${allowRetake ? `<button class="card-retake" style="max-width:220px;margin:14px auto 0" onclick="initCardTab()">↺ Reprendre la photo</button>` : ''}
+    </div>`;
+}
+
+async function analyzeCard() {
+  if (!_cardImages.recto) return;
+  const apiKey = localStorage.getItem('ast_api_key');
+  if (!apiKey) { alert('Clé API manquante — vérifiez les paramètres.'); return; }
+  if (!navigator.onLine) { _cardResultError('Pas de connexion internet. Ta photo est conservée — clique de nouveau sur « Analyser » dès que le réseau revient.', false); return; }
+  const btn = document.getElementById('card-analyze-btn');
+  const res = document.getElementById('card-result');
+  if (btn) btn.disabled = true;
+  res.innerHTML = `<div class="search-loading" style="padding:28px 0">
+      <div class="ast-loader"><svg class="ast-loader-star" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 3 C53 38 62 47 97 50 C62 53 53 62 50 97 C47 62 38 53 3 50 C38 47 47 38 50 3 Z" fill="var(--navy)"/></svg></div>
+      <div class="spinner-label">Lecture de la carte…</div>
+      <div class="spinner-sublabel">L'IA extrait les informations visibles. Quelques secondes.</div>
+    </div>`;
+  const content = [{ type: 'image', source: { type: 'base64', media_type: _cardImages.recto.media_type, data: _cardImages.recto.data } }];
+  if (_cardImages.verso) content.push({ type: 'image', source: { type: 'base64', media_type: _cardImages.verso.media_type, data: _cardImages.verso.data } });
+  content.push({ type: 'text', text: CARD_PROMPT });
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: AI_MODEL_FAST, max_tokens: 1500, messages: [{ role: 'user', content }] })
+    });
+    if (!resp.ok) { const err = await resp.json().catch(() => ({})); throw new Error(_apiErr(resp.status, err.error && err.error.message)); }
+    const data = await resp.json();
+    trackApiUsage(data.usage);
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    const parsed = _extractJsonObject(text);
+    if (!parsed) { _cardResultError("L'IA n'a pas renvoyé de résultat lisible. Reprends la photo (plus nette, bien cadrée, sans reflet).", true); if (btn) btn.disabled = false; return; }
+    _cardExtracted = parsed;
+    renderCardReview(parsed);
+  } catch (e) {
+    _cardResultError(e.message, true);
+    if (btn) btn.disabled = false;
+  }
+}
+
+function _cardAttr(v) { return (v == null || String(v).toLowerCase() === 'null') ? '' : String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+function renderCardReview(x) {
+  const res = document.getElementById('card-result'); if (!res) return;
+  document.getElementById('card-capture').style.display = 'none';
+  // Aucune info de contact détectée → ce n'est pas une carte
+  const anyInfo = [x.company, x.contact_name, x.email, x.phone, x.mobile].some(v => v && String(v).toLowerCase() !== 'null');
+  if (!anyInfo) { _cardResultError('Aucune information de contact détectée. Ce n\'est peut-être pas une carte de visite — reprends la photo.', true); return; }
+
+  const conf = String(x.confidence || 'medium').toLowerCase();
+  const confBadge = conf === 'high'
+    ? '<span class="card-conf" style="background:#dcfce7;color:#166534">✅ Bonne lecture</span>'
+    : '<span class="card-conf" style="background:#fef3c7;color:#92400e">⚠️ Lecture incertaine — vérifiez chaque champ</span>';
+  const thumbs = ['recto', 'verso'].filter(s => _cardImages[s]).map(s => `<img src="data:${_cardImages[s].media_type};base64,${_cardImages[s].data}" alt="${s}" />`).join('');
+
+  const field = (id, label, val, o) => {
+    o = o || {};
+    const missing = (val == null || val === '' || String(val).toLowerCase() === 'null');
+    const flag = missing && o.flag !== false;
+    const inner = o.textarea
+      ? `<textarea id="${id}" rows="2">${missing ? '' : _esc0(val)}</textarea>`
+      : `<input id="${id}" type="${o.type || 'text'}" value="${_cardAttr(val)}" placeholder="${o.ph || ''}" />`;
+    return `<div class="card-field${o.full ? ' full' : ''}${flag ? ' missing' : ''}"><label>${label}</label>${inner}${flag ? '<span class="field-warn">⚠️ non lu — à compléter</span>' : ''}</div>`;
+  };
+  const sel = (id, label, opts, val, extraFirst) => {
+    const options = [`<option value="">${extraFirst || '— non renseigné —'}</option>`]
+      .concat(opts.map(o => `<option${String(val || '').toLowerCase() === String(o).toLowerCase() ? ' selected' : ''}>${o}</option>`)).join('');
+    return `<div class="card-field"><label>${label}</label><select id="${id}">${options}</select></div>`;
+  };
+  const statusOpts = Object.keys(STATUS_LABELS).map(k => `<option value="${k}"${k === 'cold' ? ' selected' : ''}>${STATUS_LABELS[k].emoji} ${STATUS_LABELS[k].label}</option>`).join('');
+
+  res.innerHTML = `<div class="card-review">
+    <div class="card-review-head">
+      ${confBadge}
+      ${thumbs ? `<div class="card-review-thumbs">${thumbs}</div>` : ''}
+    </div>
+    <div class="card-review-grid">
+      ${field('card-f-company', 'Entreprise', x.company)}
+      ${field('card-f-name', 'Contact', x.contact_name)}
+      ${field('card-f-title', 'Fonction', x.job_title)}
+      ${field('card-f-email', 'Email', x.email, { type: 'email' })}
+      ${field('card-f-phone', 'Téléphone fixe', x.phone, { type: 'tel', flag: false })}
+      ${field('card-f-mobile', 'Mobile', x.mobile, { type: 'tel', flag: false })}
+      ${field('card-f-linkedin', 'LinkedIn', x.linkedin, { flag: false })}
+      ${field('card-f-website', 'Site web', x.website, { flag: false })}
+      ${field('card-f-address', 'Adresse', x.address, { full: true, flag: false })}
+      ${field('card-f-postal', 'Code postal', x.postal_code, { flag: false })}
+      ${field('card-f-city', 'Ville', x.city, { flag: false })}
+      ${sel('card-f-size', 'Taille (optionnel)', CARD_SIZE_OPTS, x._size)}
+      ${sel('card-f-sector', 'Secteur (optionnel)', CARD_SECTOR_OPTS, x._sector)}
+      <div class="card-field"><label>Statut</label><select id="card-f-status">${statusOpts}</select></div>
+      ${field('card-f-notes', 'Notes', x.notes, { full: true, textarea: true, flag: false })}
+    </div>
+    <div class="card-actions">
+      <button class="btn-search" style="flex:1;min-width:180px;justify-content:center" onclick="addCardToCRM()"><span>✓</span><span>Ajouter au CRM</span></button>
+      <button class="card-retake" style="flex:0 0 auto;width:auto;margin:0;padding:10px 16px" onclick="initCardTab()">↺ Reprendre</button>
+      <button class="card-retake" style="flex:0 0 auto;width:auto;margin:0;padding:10px 16px" onclick="switchTab('crm')">✕ Annuler</button>
+    </div>
+  </div>`;
+}
+
+function addCardToCRM() {
+  const val = id => (document.getElementById(id)?.value || '').trim();
+  const company = val('card-f-company');
+  if (!company) { alert('Le nom de l\'entreprise est requis — complète-le.'); document.getElementById('card-f-company')?.focus(); return; }
+
+  const fixe = val('card-f-phone'), mobile = val('card-f-mobile');
+  const phone = mobile || fixe;                       // le mobile (ligne directe) en priorité
+  const addressParts = [val('card-f-address'), [val('card-f-postal'), val('card-f-city')].filter(Boolean).join(' ')].filter(Boolean);
+  let notes = val('card-f-notes');
+  const extra = [];
+  if (mobile && fixe) extra.push('Tél fixe : ' + fixe);
+  if (val('card-f-website')) extra.push('Site : ' + val('card-f-website'));
+  extra.push('📇 Ajouté via carte de visite');
+  notes = [notes, extra.join(' · ')].filter(Boolean).join(' · ');
+
+  const prospect = {
+    id: Date.now(),
+    company,
+    size:    val('card-f-size'),
+    sector:  val('card-f-sector'),
+    address: addressParts.join(', '),
+    contactName:  val('card-f-name'),
+    contactTitle: val('card-f-title'),
+    phone,
+    email:    val('card-f-email'),
+    linkedin: validateLinkedInUrl(val('card-f-linkedin'), 'person') || '',   // jamais un lien fabriqué
+    notes,
+    status:   val('card-f-status') || 'cold',
+    commercial: localStorage.getItem('ast_commercial') || '',
+    createdAt: Date.now(),
+    lat: null, lng: null
+  };
+  crmProspects.unshift(prospect);
+  saveCrm();
+  if (typeof addCrmToMap === 'function') addCrmToMap(prospect);
+  if (typeof renderCrmList === 'function') renderCrmList();
+
+  // Confirmation + enchaînement (utile en salon)
+  const res = document.getElementById('card-result');
+  if (res) res.innerHTML = `<div class="card-toast">✅ <b>${_esc0(prospect.contactName || prospect.company)}</b> ajouté au CRM.</div>
+    <div class="card-actions">
+      <button class="btn-search" style="flex:1;min-width:180px;justify-content:center" onclick="initCardTab()"><span>📇</span><span>Scanner une autre carte</span></button>
+      <button class="card-retake" style="flex:0 0 auto;width:auto;margin:0;padding:10px 16px" onclick="switchTab('crm')">Voir le CRM →</button>
+    </div>`;
+}
+
+// ══════════════ IMPORT EXCEL / CSV → CRM (fiable) ══════════════
+let _xlsxLoading = null;
+function loadXLSX() {
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  if (_xlsxLoading) return _xlsxLoading;
+  _xlsxLoading = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = () => res(window.XLSX);
+    s.onerror = () => { _xlsxLoading = null; rej(new Error('Impossible de charger le lecteur de fichiers (vérifie ta connexion internet).')); };
+    document.head.appendChild(s);
+  });
+  return _xlsxLoading;
+}
+function _impNorm(s) { return String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim(); }
+const IMPORT_FIELDS = [
+  { key:'company',      label:'Entreprise',   kw:['entreprise','societe','company','raison sociale','client','compte','organisation','nom entreprise'] },
+  { key:'contactName',  label:'Contact',      kw:['contact','nom complet','nom et prenom','interlocuteur','nom','prenom','name','full name'] },
+  { key:'contactTitle', label:'Fonction',     kw:['fonction','poste','titre','job title','title','role'] },
+  { key:'email',        label:'Email',        kw:['email','e-mail','mail','courriel'] },
+  { key:'phone',        label:'Téléphone',    kw:['telephone','tel','phone','portable','mobile','gsm','numero'] },
+  { key:'sector',       label:'Secteur',      kw:['secteur','activite','industrie','sector','domaine'] },
+  { key:'size',         label:'Taille',       kw:['taille','effectif','salaries','employes','size'] },
+  { key:'address',      label:'Adresse',      kw:['adresse','address','rue','localisation'] },
+  { key:'linkedin',     label:'LinkedIn',     kw:['linkedin','profil linkedin'] },
+  { key:'notes',        label:'Notes',        kw:['notes','note','remarque','commentaire','info','divers'] },
+  { key:'status',       label:'Statut',       kw:['statut','status','etat','stade'] },
+];
+let _importRows = [], _importHeaders = [], _importMap = {};
+
+function triggerCrmImport() { const el = document.getElementById('crm-import-input'); if (el) el.click(); }
+
+function handleImportFile(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  loadXLSX().then(XLSX => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array', codepage: 65001 });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        if (!sheet) { alert('Fichier vide ou illisible.'); return; }
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+        const hIdx = rows.findIndex(r => r.some(c => String(c).trim() !== ''));
+        if (hIdx < 0) { alert('Fichier vide.'); return; }
+        _importHeaders = rows[hIdx].map(h => String(h).trim());
+        _importRows = rows.slice(hIdx + 1)
+          .filter(r => r.some(c => String(c).trim() !== ''))
+          .map(r => { const o = {}; _importHeaders.forEach((h, i) => { o[i] = String(r[i] == null ? '' : r[i]).trim(); }); return o; });
+        if (!_importRows.length) { alert('Aucune ligne de données trouvée sous les en-têtes.'); return; }
+        _autoMapImport();
+        showImportModal();
+      } catch (err) { alert('Lecture impossible : ' + err.message); }
+    };
+    reader.onerror = () => alert('Lecture du fichier impossible.');
+    reader.readAsArrayBuffer(file);
+  }).catch(err => alert(err.message));
+}
+
+function _autoMapImport() {
+  _importMap = {}; const used = new Set();
+  IMPORT_FIELDS.forEach(f => {
+    let best = '';
+    for (let i = 0; i < _importHeaders.length; i++) {
+      if (used.has(i)) continue;
+      const h = _impNorm(_importHeaders[i]);
+      if (f.kw.some(k => { const nk = _impNorm(k); return h === nk || h.includes(nk); })) { best = String(i); break; }
+    }
+    if (best !== '') used.add(Number(best));
+    _importMap[f.key] = best;
+  });
+}
+function _mapImportStatus(v) {
+  const t = _impNorm(v); if (!t) return 'cold';
+  if (/client/.test(t)) return 'client';
+  if (/devis|quote/.test(t)) return 'quote';
+  if (/consomm|acheteur|actif/.test(t)) return 'consumer';
+  if (/ne consomme|perdu|inactif|refus|pas interesse/.test(t)) return 'no';
+  return 'cold';
+}
+function _rowToProspect(row) {
+  const g = key => { const idx = _importMap[key]; return idx === '' || idx == null ? '' : String(row[idx] || '').trim(); };
+  const company = g('company'), contactName = g('contactName');
+  if (!company && !contactName) return null;  // ligne inexploitable → ignorée
+  return { company, contactName, contactTitle: g('contactTitle'), email: g('email'), phone: g('phone'),
+    sector: g('sector'), size: g('size'), address: g('address'), linkedin: g('linkedin'),
+    notes: g('notes'), status: _mapImportStatus(g('status')) };
+}
+function _importDupKey(p) { return _impNorm(p.company) + '|' + _impNorm(p.contactName) + '|' + _impNorm(p.email); }
+
+function showImportModal() {
+  closeImportModal();
+  const ov = document.createElement('div');
+  ov.className = 'imp-overlay'; ov.id = 'imp-overlay';
+  ov.onclick = e => { if (e.target === ov) closeImportModal(); };
+  ov.innerHTML = `<div class="imp-modal">
+      <div class="imp-head"><h3>📥 Importer des prospects</h3><button class="mkt-modal-close" onclick="closeImportModal()">✕</button></div>
+      <div class="imp-body">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5">Vérifie la correspondance des colonnes, puis lance l'import. Les doublons (déjà dans <b>tes</b> prospects) et les lignes vides sont ignorés automatiquement. Rien n'est inventé : une colonne « ignorer » reste vide.</div>
+        <div class="imp-map-grid" id="imp-map-grid"></div>
+        <div class="imp-stats" id="imp-stats"></div>
+        <div class="imp-preview" id="imp-preview"></div>
+      </div>
+      <div class="imp-actions">
+        <button class="card-retake" style="width:auto;margin:0;padding:10px 16px" onclick="closeImportModal()">Annuler</button>
+        <button class="btn-search" id="imp-do-btn" style="justify-content:center;padding:10px 20px" onclick="doImport()"><span>✓</span><span id="imp-do-text">Importer</span></button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  _renderImportMapping();
+  _renderImportPreview();
+}
+function closeImportModal() { const o = document.getElementById('imp-overlay'); if (o) o.remove(); }
+
+function _renderImportMapping() {
+  const grid = document.getElementById('imp-map-grid'); if (!grid) return;
+  grid.innerHTML = IMPORT_FIELDS.map(f => {
+    const cur = String(_importMap[f.key] == null ? '' : _importMap[f.key]);
+    const opts = `<option value=""${cur === '' ? ' selected' : ''}>— ignorer —</option>` +
+      _importHeaders.map((h, i) => `<option value="${i}"${cur === String(i) ? ' selected' : ''}>${_esc0(h) || ('Colonne ' + (i + 1))}</option>`).join('');
+    return `<div class="imp-map-field"><label>${f.label}${f.key === 'company' ? ' *' : ''}</label><select onchange="_onImportMap('${f.key}', this.value)">${opts}</select></div>`;
+  }).join('');
+}
+function _onImportMap(key, val) { _importMap[key] = val; _renderImportPreview(); }
+
+function _renderImportPreview() {
+  const me = localStorage.getItem('ast_commercial') || '';
+  const existing = new Set(crmProspects.filter(p => p.commercial === me).map(p => _importDupKey({ company: p.company, contactName: p.contactName, email: p.email })));
+  const batch = new Set();
+  let valid = 0, dups = 0, empty = 0;
+  const info = _importRows.map(row => {
+    const base = _rowToProspect(row);
+    if (!base) { empty++; return { base: null, dup: false }; }
+    const key = _importDupKey(base);
+    const dup = existing.has(key) || batch.has(key);
+    if (dup) dups++; else { valid++; batch.add(key); }
+    return { base, dup };
+  });
+  const stats = document.getElementById('imp-stats');
+  if (stats) stats.innerHTML = `<div><b style="color:#16a34a">${valid}</b>à importer</div><div><b style="color:#d97706">${dups}</b>doublon(s) ignoré(s)</div><div><b style="color:#94a3b8">${empty}</b>ligne(s) vide(s)</div>`;
+  const t = document.getElementById('imp-do-text'); if (t) t.textContent = `Importer ${valid} prospect${valid > 1 ? 's' : ''}`;
+  const b = document.getElementById('imp-do-btn'); if (b) b.disabled = valid === 0;
+  const cols = ['company', 'contactName', 'contactTitle', 'email', 'phone', 'status'];
+  const lbl = k => (IMPORT_FIELDS.find(f => f.key === k) || {}).label || k;
+  const shown = info.filter(r => r.base).slice(0, 6);
+  const prev = document.getElementById('imp-preview');
+  if (prev) prev.innerHTML = shown.length
+    ? `<table><thead><tr>${cols.map(c => `<th>${lbl(c)}</th>`).join('')}</tr></thead><tbody>${shown.map(r => `<tr class="${r.dup ? 'dup' : ''}">${cols.map(c => `<td>${_esc0(r.base[c] || '')}</td>`).join('')}</tr>`).join('')}</tbody></table>`
+    : '<div style="padding:16px;font-size:12px;color:var(--text3)">Aucune ligne exploitable — associe au moins la colonne « Entreprise » ou « Contact ».</div>';
+}
+
+function doImport() {
+  const me = localStorage.getItem('ast_commercial') || '';
+  const existing = new Set(crmProspects.filter(p => p.commercial === me).map(p => _importDupKey({ company: p.company, contactName: p.contactName, email: p.email })));
+  const batch = new Set();
+  let added = 0, dups = 0, empty = 0;
+  const now = Date.now();
+  const toAdd = [];
+  _importRows.forEach(row => {
+    const base = _rowToProspect(row);
+    if (!base) { empty++; return; }
+    const key = _importDupKey(base);
+    if (existing.has(key) || batch.has(key)) { dups++; return; }
+    batch.add(key); toAdd.push(base);
+  });
+  toAdd.forEach((base, i) => {
+    crmProspects.unshift({
+      id: now + i, company: base.company, size: base.size, sector: base.sector, address: base.address,
+      contactName: base.contactName, contactTitle: base.contactTitle, phone: base.phone, email: base.email,
+      linkedin: validateLinkedInUrl(base.linkedin, 'person') || '',   // jamais un lien fabriqué
+      notes: [base.notes, '📥 Importé le ' + new Date().toLocaleDateString('fr-FR')].filter(Boolean).join(' · '),
+      status: base.status, commercial: me, createdAt: now + i, lat: null, lng: null
+    });
+    added++;
+  });
+  if (added) saveCrm();
+  if (typeof renderCrmList === 'function') renderCrmList();
+  closeImportModal();
+  alert(`Import terminé : ${added} prospect${added > 1 ? 's' : ''} ajouté${added > 1 ? 's' : ''}` + (dups ? ` · ${dups} doublon(s) ignoré(s)` : '') + (empty ? ` · ${empty} ligne(s) vide(s) ignorée(s)` : '') + '.');
+}
+
 function renderResults(data) {
   const zone = document.getElementById('results-zone');
   const co = data.company || {};
@@ -4430,7 +5452,7 @@ function renderResults(data) {
   });
 
   const coInit = initials(co.name || '?');
-  let html = '';
+  let html = _revealBanner(data);
 
   // Company hero
   html += `
@@ -4469,11 +5491,15 @@ function renderResults(data) {
       <button class="btn-export" onclick="exportCSV()">↓ Exporter CSV</button>
     </div>`;
 
-    // Contacts by department
-    Object.entries(byDept).sort((a,b) => b[1].length - a[1].length).forEach(([dept, people]) => {
+    // Contacts by department — les pôles cochés (ciblés) remontent EN TÊTE.
+    const _isTargeted = (dept) => { const pole = _matchPole(dept); return pole && _lastSearchRoles.includes(pole); };
+    Object.entries(byDept)
+      .sort((a,b) => (_isTargeted(b[0]) - _isTargeted(a[0])) || (b[1].length - a[1].length))
+      .forEach(([dept, people]) => {
+      const targeted = _isTargeted(dept);
       html += `
       <div class="dept-section">
-        <div class="dept-label">${dept} <span class="dept-pill">${people.length}</span></div>
+        <div class="dept-label">${dept} <span class="dept-pill">${people.length}</span>${targeted ? ' <span class="pole-target">🎯 ciblé</span>' : ''}</div>
         <div class="contacts-grid">`;
 
       people.forEach(p => {
@@ -4491,10 +5517,10 @@ function renderResults(data) {
           </div>
           <div class="card-divider"></div>
           <div class="card-details">
-            ${p.email ? `<div class="detail-row"><span class="detail-icon">✉</span><a href="mailto:${p.email}">${p.email}</a>${_confDot(p.email_confidence)}</div>` : ''}
-            ${p.phone ? `<div class="detail-row"><span class="detail-icon">📞</span><span>${p.phone}</span>${_confDot(p.phone_confidence)}</div>` : ''}
-            ${p.linkedin ? `<div class="detail-row"><span class="detail-icon">🔗</span><a href="${p.linkedin.startsWith('http')?p.linkedin:'https://'+p.linkedin}" target="_blank">Voir LinkedIn</a></div>` : ''}
-            ${!p.email && !p.phone && !p.linkedin ? `<div class="no-data">Coordonnées non disponibles</div>` : ''}
+            ${_contactEmailRow(p, co)}
+            ${_contactPhoneRow(p, co)}
+            ${_liCell(p, co)}
+            ${!_contactEmailRow(p, co) && !_contactPhoneRow(p, co) && !_liCell(p, co) ? `<div class="no-data">Coordonnées non disponibles</div>` : ''}
             ${p.source ? `<div style="margin-top:6px"><span style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;background:#f1f5f9;color:#64748b;border-radius:4px;padding:2px 6px">✓ ${p.source}</span></div>` : ''}
           </div>
           <button class="card-crm-btn" onclick='addSearchResultToCRM(${JSON.stringify({
@@ -4517,7 +5543,7 @@ function renderResults(data) {
 
 // ── TABS ──────────────────────────────────────────────────────────────
 function switchTab(tab) {
-  const allTabs = ['home','company','territory','map','crm','outreach','pipeline','messaging','campaigns','fiches','samples'];
+  const allTabs = ['home','company','territory','map','crm','carte','outreach','pipeline','messaging','campaigns','fiches','samples'];
   allTabs.forEach(t => {
     const btn = document.getElementById('tab-'+t);
     const panel = document.getElementById('panel-'+t);
@@ -4533,6 +5559,9 @@ function switchTab(tab) {
   if (tab === 'outreach') initOutreach();
   if (tab === 'pipeline') initPipeline();
   if (tab === 'messaging') initMessaging();
+  if ((tab === 'company' || tab === 'territory') && typeof renderEngineSwitch === 'function') renderEngineSwitch();
+  if (tab === 'company' && typeof initCompanyGeo === 'function') initCompanyGeo();
+  if (tab === 'carte' && typeof initCardTab === 'function') initCardTab();
 }
 
 // ── TERRITORY SECTORS ─────────────────────────────────────────────────
@@ -4610,15 +5639,74 @@ function selectTerritory(type, value, label, region) {
 }
 
 // ── CONTACT ROLE TARGETING ────────────────────────────────────────────
+// Mapping pôle Astéria → (label, dept = job_department Explorium, titles = intitulés à autocompléter)
 const ROLE_TARGETS = {
-  achats:      { label: 'Achats / Approvisionnements', titles: 'Directeur des Achats, Responsable Achats, Acheteur, Responsable Approvisionnements' },
-  direction:   { label: 'Direction',                   titles: 'PDG, Directeur Général (DG), Gérant, Président, Directeur de site' },
-  marketing:   { label: 'Marketing / Communication',   titles: 'Directeur Marketing, Responsable Communication, Chef de produit, Responsable Marketing' },
-  production:  { label: 'Production / Méthodes',        titles: 'Directeur de Production, Responsable Production, Responsable Méthodes / Industrialisation, Responsable d\'atelier' },
-  qualite:     { label: 'Qualité / R&D',               titles: 'Responsable Qualité, Directeur R&D, Responsable Développement Produit, Responsable HSE' },
-  commercial:  { label: 'Commercial / Ventes',         titles: 'Directeur Commercial, Responsable Ventes, Responsable Grands Comptes' },
-  supplychain: { label: 'Supply Chain / Logistique',   titles: 'Directeur Supply Chain, Responsable Logistique, Responsable Approvisionnement' },
+  achats:      { label: 'Achats / Approvisionnements', dept: 'procurement',  titles: 'Responsable Achats, Directeur des Achats, Acheteur, Responsable Approvisionnements, Purchasing Manager, Procurement Manager, Head of Procurement, Buyer' },
+  direction:   { label: 'Direction',                   dept: 'c-suite',      titles: 'Directeur Général, PDG, Gérant, Président, Directeur de site, CEO, Managing Director' },
+  marketing:   { label: 'Marketing / Packaging',       dept: 'marketing',    titles: 'Responsable Marketing, Directeur Marketing, Chef de produit, Brand Manager, Responsable Packaging, Marketing Manager, Product Manager' },
+  production:  { label: 'Production / Industriel',      dept: 'manufacturing',titles: 'Responsable Production, Directeur Industriel, Responsable Conditionnement, Plant Manager, Production Manager, Operations Manager, Responsable Méthodes' },
+  qualite:     { label: 'Qualité / R&D',               dept: '',             titles: 'Responsable Qualité, Quality Manager, Responsable QHSE, Responsable Assurance Qualité, Responsable R&D, Responsable Développement Produit, R&D Manager' },
+  commercial:  { label: 'Commercial / Ventes',         dept: 'sales',        titles: 'Directeur Commercial, Responsable Ventes, Responsable Grands Comptes, Sales Manager' },
+  supplychain: { label: 'Supply Chain / Logistique',   dept: 'logistics',    titles: 'Responsable Supply Chain, Responsable Logistique, Responsable Approvisionnement, Supply Chain Manager, Logistics Manager' },
 };
+// Mots-clés pour reconnaître le pôle d'un contact (tri/priorisation côté résultats)
+const ROLE_MATCH = {
+  achats:      ['achat','purchas','procure','approvision','buyer','sourcing'],
+  direction:   ['direction','directeur général','directeur general','pdg','p.d.g','ceo','gérant','gerant','président','president','managing director','dirigeant','directeur de site','fondateur','founder'],
+  marketing:   ['marketing','packaging','brand','communication','chef de produit','product manager','produit'],
+  production:  ['production','industriel','conditionnement','plant','méthodes','methodes','fabrication','manufactur','atelier','opérations','operations'],
+  qualite:     ['qualité','qualite','quality','qhse','hse','assurance qualité','r&d','r & d','développement','developpement','recherche'],
+  commercial:  ['commercial','vente','sales','grands comptes','account'],
+  supplychain: ['supply','logisti','approvision','chain','flux'],
+};
+// Renvoie la clé de pôle correspondant à un intitulé/département, sinon null.
+function _matchPole(text) {
+  const t = String(text || '').toLowerCase();
+  for (const key in ROLE_MATCH) { if (ROLE_MATCH[key].some(k => t.includes(k))) return key; }
+  return null;
+}
+
+// ── LOCALISATION recherche entreprise (réutilise REGIONS_DEPTS de l'onglet territoire) ──
+function initCompanyGeo() {
+  const reg = document.getElementById('company-region');
+  if (!reg || reg.dataset.filled) return;
+  Object.keys(REGIONS_DEPTS).sort((a, b) => a.localeCompare(b, 'fr')).forEach(r => {
+    const o = document.createElement('option'); o.value = r; o.textContent = r; reg.appendChild(o);
+  });
+  reg.dataset.filled = '1';
+}
+function onCompanyRegionChange() {
+  const reg = document.getElementById('company-region').value;
+  const dep = document.getElementById('company-dept');
+  dep.innerHTML = '<option value="">Département…</option>';
+  (REGIONS_DEPTS[reg] || []).forEach(([code, name]) => {
+    const o = document.createElement('option'); o.value = `${code} – ${name}`; o.textContent = `${code} – ${name}`; dep.appendChild(o);
+  });
+}
+function getCompanyGeo() {
+  const city   = (document.getElementById('company-city')?.value || '').trim();
+  const region = document.getElementById('company-region')?.value || '';
+  const dept   = document.getElementById('company-dept')?.value || '';
+  if (!city && !region && !dept) return null;
+  return { city, region, dept };
+}
+// Bloc de filtre géographique pour le prompt (France par défaut).
+function _geoInstr(geo) {
+  if (!geo) return '';
+  const parts = [];
+  if (geo.city)   parts.push(`ville = "${geo.city}"`);
+  if (geo.dept)   parts.push(`département = "${geo.dept}"`);
+  if (geo.region) parts.push(`région = "${geo.region}"`);
+  return `
+
+═══ FILTRE GÉOGRAPHIQUE ═══
+Pays = France (company_country_code "FR"). ${parts.join(', ')}.
+Restreins la recherche à cette zone ET utilise-la pour DÉSAMBIGUÏSER si plusieurs entreprises portent le même nom (ex. la "Martin SAS" de Lille vs celle de Lyon). Applique le filtre géo Explorium (city_region / company_region_country_code). Si aucune entreprise ne correspond exactement à la zone, signale-le dans "approach".`;
+}
+function _geoLabel(geo) {
+  if (!geo) return '';
+  return [geo.city, geo.dept, geo.region].filter(Boolean).join(' · ');
+}
 
 function toggleRoleChip(el) {
   el.classList.toggle('selected');
@@ -4631,14 +5719,24 @@ function getSelectedRoles(containerId) {
   );
 }
 
-// Build the prompt instruction that focuses Claude on the chosen decision-makers
+// Build the prompt instruction that focuses Claude on the chosen decision-makers.
+// Sans sélection → filet large ; avec sélection → filtrage STRICT sur les pôles cochés.
 function buildRoleInstruction(roles) {
   if (!roles || !roles.length) {
-    return 'Cible en priorité les fonctions ACHATS et APPROVISIONNEMENTS, puis QUALITÉ, PRODUCTION, MARKETING, COMMERCIAL et enfin la DIRECTION.';
+    return `CIBLAGE : aucun pôle imposé → privilégie les décideurs Achats, Qualité, Production, Supply Chain, Marketing et Direction (job_level : director, manager, vice president, c-suite).`;
   }
-  const lines = roles.map(r => ROLE_TARGETS[r]).filter(Boolean)
-    .map(t => `  - ${t.label} : ex. ${t.titles}`).join('\n');
-  return `CIBLAGE DEMANDÉ — concentre-toi EN PRIORITÉ sur ces fonctions (ne retourne d'autres fonctions que si aucun contact pertinent n'existe dans celles-ci) :\n${lines}`;
+  const picked = roles.map(r => ROLE_TARGETS[r]).filter(Boolean);
+  const depts = picked.map(t => t.dept).filter(Boolean);
+  const lines = picked.map(t => `  • ${t.label}${t.dept ? ` (job_department "${t.dept}")` : ''} → intitulés : ${t.titles}`).join('\n');
+  return `═══ CIBLAGE POSTE — FILTRE STRICT (le plus important) ═══
+Le commercial a coché CES pôles UNIQUEMENT. Ce sont les SEULS décideurs cibles :
+${lines}
+
+Applique-les comme un VRAI filtre Explorium, pas comme une préférence :
+1. \`autocomplete\` (field=job_title) sur les intitulés ci-dessus pour récupérer les valeurs EXACTES reconnues par Explorium.
+2. \`fetch-entities\` (entity_type=prospects) filtré sur ces \`job_title\` standardisés${depts.length ? ` ET \`job_department\` = [${depts.map(d => `"${d}"`).join(', ')}]` : ''}, \`job_level\` ∈ [director, manager, vice president, c-suite, senior manager, owner].
+3. Ne remonte AUCUN contact hors de ces pôles. Si (et seulement si) aucun décideur de ces pôles n'existe, tu peux remonter d'autres fonctions MAIS tu dois le signaler dans "approach" (ex : "aucun contact Achats trouvé, voici la Direction").
+Chaque contact renvoyé DOIT appartenir à l'un des pôles cochés — vérifie l'intitulé avant de l'inclure.`;
 }
 
 function setProgressT(step) {
@@ -4651,7 +5749,7 @@ function setProgressT(step) {
 }
 
 // ── TERRITORY API CALL ────────────────────────────────────────────────
-async function callTerritoryProspecting(geo, sectors, size, roles) {
+async function callTerritoryProspecting(geo, sectors, size, roles, userSignal) {
   const apiKey = localStorage.getItem('ast_api_key');
   const sectorList = sectors.join(', ');
   // Accepte l'objet zone {type,value,label,region} ou une chaîne région (rétro-compat)
@@ -4685,6 +5783,7 @@ ${roleInstruction}
 - Ne JAMAIS inventer ni deviner un email, un téléphone, un nom ou un titre. Une valeur "plausible" mais non vérifiée = INVENTÉE = INTERDITE.
 - Non trouvé / non recoupé de façon fiable → null. Un null est TOUJOURS préférable à une valeur incertaine.
 - N'infère JAMAIS un email par un schéma "prenom.nom@domaine" : ne le mets que si réellement vu publié.
+- N'infère, ne construis, ne complète JAMAIS une URL LinkedIn à partir d'un nom : ne mets un lien QUE si réellement vu publié. Sinon null.
 - Chaque info clé porte une confiance : "verified" (≥2 sources publiques), "probable" (1 source fiable), "not_found" (→ valeur null).
 - Cite la "source" réelle de chaque contact.
 
@@ -4711,6 +5810,7 @@ Réponds UNIQUEMENT en JSON valide, sans markdown, sans texte autour :
       "priority": "chaud | tiède | froid",
       "buying_signals": ["signal concret si trouvé"],
       "approach": "Angle d'approche commercial concret en 1 phrase",
+      "company_linkedin": "URL de la PAGE ENTREPRISE LinkedIn (linkedin.com/company/...) réellement vue, sinon null",
       "sources": ["nom ou URL des sources principales"],
       "contacts": [
         {
@@ -4719,7 +5819,7 @@ Réponds UNIQUEMENT en JSON valide, sans markdown, sans texte autour :
           "department": "Achats | Marketing | Direction | Production | Qualité | ...",
           "email": "email public vérifié ou null",
           "phone": "ligne directe vérifiée ou null",
-          "linkedin": "URL LinkedIn publique vérifiée ou null",
+          "linkedin": "URL du PROFIL LinkedIn de la personne (linkedin.com/in/...) réellement vue, jamais déduite du nom, sinon null",
           "name_confidence": "verified | probable | not_found",
           "email_confidence": "verified | probable | not_found",
           "phone_confidence": "verified | probable | not_found",
@@ -4742,13 +5842,15 @@ Trouve 4 à 6 entreprises RÉELLES dans "${regionStr}" avec 2 à 5 contacts sûr
 
     const body = {
       model: AI_MODEL_SEARCH,
-      max_tokens: 8000,
+      max_tokens: 12000,
+      cache_control: { type: 'ephemeral' },   // auto-cache (0 impact qualité)
       messages,
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 7 }]
     };
     if (forceAnswer) body.tool_choice = { type: 'none' };
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    if (userSignal && userSignal.aborted) throw new Error('__CANCELLED__');
+    const resp = await _timedFetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -4757,7 +5859,7 @@ Trouve 4 à 6 entreprises RÉELLES dans "${regionStr}" avec 2 à 5 contacts sûr
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify(body)
-    });
+    }, userSignal, SEARCH_TIMEOUT_MS);
 
     if (!resp.ok) {
       const e = await resp.json().catch(() => ({}));
@@ -4852,7 +5954,7 @@ function renderTerritoryResults(data) {
   }
 
   const s = data.search || {};
-  let html = `
+  let html = _revealBanner(data) + `
     <div class="company-hero" style="margin-bottom:20px">
       <div style="flex:1">
         <div class="company-name-lg">📍 ${s.region||'Toute la France'}</div>
@@ -4905,10 +6007,10 @@ function renderTerritoryResults(data) {
             </div>
             <div class="card-divider"></div>
             <div class="card-details">
-              ${p.email?`<div class="detail-row"><span class="detail-icon">✉</span><a href="mailto:${p.email}">${p.email}</a>${_confDot(p.email_confidence)}</div>`:''}
-              ${p.phone?`<div class="detail-row"><span class="detail-icon">📞</span>${p.phone}${_confDot(p.phone_confidence)}</div>`:''}
-              ${p.linkedin?`<div class="detail-row"><span class="detail-icon">🔗</span><a href="${p.linkedin.startsWith('http')?p.linkedin:'https://'+p.linkedin}" target="_blank">LinkedIn</a></div>`:''}
-              ${!p.email&&!p.phone&&!p.linkedin?`<div class="no-data">Coordonnées non disponibles</div>`:''}
+              ${_contactEmailRow(p, co)}
+              ${_contactPhoneRow(p, co)}
+              ${_liCell(p, co)}
+              ${!_contactEmailRow(p, co)&&!_contactPhoneRow(p, co)&&!_liCell(p, co)?`<div class="no-data">Coordonnées non disponibles</div>`:''}
               ${p.source?`<div style="margin-top:6px"><span style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;background:#f1f5f9;color:#64748b;border-radius:4px;padding:2px 6px">✓ ${p.source}</span></div>`:''}
             </div>
             <button class="card-crm-btn" onclick='addSearchResultToCRM(${JSON.stringify({company: coPayload, contact: p}).replace(/'/g,"&#39;")})' title="Ajouter ce contact au CRM">
@@ -4947,7 +6049,7 @@ function getCrmStatus() {
 }
 
 function clearCrmForm() {
-  ['crm-company','crm-address','crm-contact-name','crm-contact-title','crm-phone','crm-email','crm-notes'].forEach(id => {
+  ['crm-company','crm-address','crm-contact-name','crm-contact-title','crm-phone','crm-email','crm-linkedin','crm-notes'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.value = ''; el.classList.remove('error'); }
   });
@@ -4991,6 +6093,7 @@ function submitCrmForm() {
     contactTitle: document.getElementById('crm-contact-title').value.trim(),
     phone:        document.getElementById('crm-phone').value.trim(),
     email:        document.getElementById('crm-email').value.trim(),
+    linkedin:     document.getElementById('crm-linkedin').value.trim(),
     notes:        document.getElementById('crm-notes').value.trim(),
     status:       getCrmStatus(),
     commercial:   localStorage.getItem('ast_commercial') || '',
@@ -5086,6 +6189,7 @@ function editCrm(id) {
   document.getElementById('crm-contact-title').value = p.contactTitle || '';
   document.getElementById('crm-phone').value         = p.phone || '';
   document.getElementById('crm-email').value         = p.email || '';
+  document.getElementById('crm-linkedin').value      = p.linkedin || '';
   document.getElementById('crm-notes').value         = p.notes || '';
   document.querySelectorAll('.crm-status-opt').forEach(o => {
     o.classList.toggle('selected', o.dataset.status === p.status);
@@ -5124,6 +6228,14 @@ function exportCrmCSV() {
 }
 
 let crmCommFilter = 'mine';
+
+// Prospects VISIBLES par l'utilisateur courant : la directrice voit tout,
+// chaque commercial ne voit QUE les siens. Source unique pour tout sélecteur/liste.
+function visibleProspects() {
+  if (isDirector()) return crmProspects;
+  const me = localStorage.getItem('ast_commercial') || '';
+  return crmProspects.filter(p => p.commercial === me);
+}
 
 function setCrmScope(scope) {
   crmCommFilter = scope === 'mine' ? 'mine' : 'all';
@@ -5209,7 +6321,8 @@ function renderCrmList() {
     const commColor = getCommercialColor(p.commercial);
     const commInit  = getCommercialInitials(p.commercial);
     const isOwn = p.commercial === me;
-    const hasContact = p.contactName || p.phone || p.email;
+    const hasContact = p.contactName || p.phone || p.email || p.linkedin;
+    const pLinkedin = validateLinkedInUrl(p.linkedin, 'person') || (p.linkedin ? (p.linkedin.startsWith('http') ? p.linkedin : 'https://' + p.linkedin) : '');
     const date = new Date(p.createdAt).toLocaleDateString('fr-FR');
     return `<div class="crm-card" style="${!isOwn?'opacity:0.85;border-style:dashed':''}">
       <div class="crm-card-header">
@@ -5233,6 +6346,7 @@ function renderCrmList() {
         ${p.contactName ? `<div class="crm-detail-row">👤 <strong>${p.contactName}</strong>${p.contactTitle?' · '+p.contactTitle:''}</div>` : ''}
         ${p.email ? `<div class="crm-detail-row">✉ <a href="mailto:${p.email}">${p.email}</a></div>` : ''}
         ${p.phone ? `<div class="crm-detail-row">📞 <a href="tel:${p.phone}">${p.phone}</a></div>` : ''}
+        ${pLinkedin ? `<div class="crm-detail-row">🔗 <a href="${pLinkedin}" target="_blank" rel="noopener noreferrer">LinkedIn</a></div>` : ''}
         <div class="crm-detail-row" style="color:var(--text3)">📅 ${date}</div>
       </div>` : ''}
       ${p.notes ? `<div class="crm-notes-box">💬 ${p.notes}</div>` : ''}
@@ -6776,7 +7890,7 @@ Réponds UNIQUEMENT avec un objet JSON valide, sans markdown, sans texte avant o
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Erreur API ${resp.status}`);
+      throw new Error(_apiErr(resp.status, err.error?.message));
     }
 
     const data = await resp.json();
@@ -7877,7 +8991,8 @@ function saveDeals(d) { localStorage.setItem('ast_deals', JSON.stringify(d)); sy
 
 function openDealModal(id) {
   dealEditId = id || null;
-  populateDealCrmSelectors();                 // alimente la liste d'entreprises depuis le CRM
+  const dlSearch = document.getElementById('dl-crm-search'); if (dlSearch) dlSearch.value = '';
+  populateDealCrmSelectors();                 // alimente la liste d'entreprises depuis le CRM (visibles uniquement)
   const cSel = document.getElementById('dl-crm-company'); if (cSel) cSel.value = '';
   const ctSel = document.getElementById('dl-crm-contact'); if (ctSel) { ctSel.innerHTML = '<option value="">— Aucun —</option>'; ctSel.disabled = true; }
   const me = localStorage.getItem('ast_commercial') || '';
@@ -7912,12 +9027,17 @@ function openDealModal(id) {
 
 // ── Deal ← auto-remplissage depuis le CRM ─────────────────────────────
 // Réutilise la structure CRM existante (crmProspects, schéma plat : 1 enreg. = 1 entreprise + 1 contact).
-function populateDealCrmSelectors() {
+function populateDealCrmSelectors(filterTerm) {
   const sel = document.getElementById('dl-crm-company');
   if (!sel) return;
-  const companies = [...new Set(crmProspects.map(p => p.company).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
+  const term = (filterTerm || '').toLowerCase().trim();
+  // Isolation : uniquement les prospects visibles par l'utilisateur (siens, ou tous si directrice).
+  let companies = [...new Set(visibleProspects().map(p => p.company).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
+  if (term) companies = companies.filter(c => c.toLowerCase().includes(term));
+  const cur = sel.value;
   sel.innerHTML = '<option value="">— Saisie manuelle —</option>' +
     companies.map(c => `<option value="${String(c).replace(/"/g,'&quot;')}">${c}</option>`).join('');
+  if (cur && companies.includes(cur)) sel.value = cur;
 }
 function onDealCompanySelect() {
   const company = document.getElementById('dl-crm-company').value;
@@ -7927,7 +9047,7 @@ function onDealCompanySelect() {
     ctSel.innerHTML = '<option value="">— Aucun —</option>'; ctSel.disabled = true;
     return;
   }
-  const records = crmProspects.filter(p => p.company === company);
+  const records = visibleProspects().filter(p => p.company === company);
   document.getElementById('dl-company').value = company;
   if (records[0] && records[0].sector) document.getElementById('dl-sector').value = records[0].sector;
   const contacts = records.filter(p => p.contactName);
@@ -7940,7 +9060,7 @@ function onDealCompanySelect() {
 function onDealContactSelect() {
   const pid = document.getElementById('dl-crm-contact').value;
   if (!pid) { ['dl-contact','dl-contact-title','dl-email','dl-phone'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; }); return; }
-  const p = crmProspects.find(x => String(x.id) === String(pid));
+  const p = visibleProspects().find(x => String(x.id) === String(pid));
   if (p) fillDealFromProspect(p);
 }
 function fillDealFromProspect(p) {
@@ -9271,6 +10391,11 @@ function toggleAdminPanel() {
   const existingSync = localStorage.getItem('ast_sync_key');
   if (existingKey) document.getElementById('api-key-input').value = existingKey;
   if (existingSync) document.getElementById('sync-key-input').value = existingSync;
+  const exTok = localStorage.getItem('ast_explorium_token');
+  const exTokEl = document.getElementById('explorium-token-input');
+  if (exTok && exTokEl) exTokEl.value = exTok;
+  const exEnEl = document.getElementById('explorium-enabled');
+  if (exEnEl) exEnEl.checked = (localStorage.getItem('ast_search_engine') === 'explorium');
 }
 
 // ── MANUAL BACKUP / RESTORE ────────────────────────────────────────
@@ -9344,6 +10469,15 @@ function saveAdminConfig() {
 
   if (key)      localStorage.setItem('ast_api_key',  key);
   if (fbConfig) localStorage.setItem('ast_sync_key', JSON.stringify(fbConfig));
+
+  // ── Explorium / Vibe Prospecting : jeton + interrupteur moteur ──
+  const exToken = document.getElementById('explorium-token-input')?.value.trim();
+  if (exToken !== undefined) {
+    if (exToken) localStorage.setItem('ast_explorium_token', exToken);
+    else         localStorage.removeItem('ast_explorium_token');
+  }
+  const exOn = document.getElementById('explorium-enabled')?.checked;
+  localStorage.setItem('ast_search_engine', exOn ? 'explorium' : 'web');
   const budgetRaw = document.getElementById('api-budget-input')?.value.trim();
   if (budgetRaw) {
     const b = parseFloat(budgetRaw);
@@ -9445,6 +10579,8 @@ document.getElementById('api-key-input')?.addEventListener('keydown', e => {
 
 // Build the region → departments picker (Tâche 3)
 (() => { if (typeof renderRegionPicker === 'function') renderRegionPicker(); })();
+(() => { if (typeof renderEngineSwitch === 'function') renderEngineSwitch(); })();
+(() => { if (typeof initCompanyGeo === 'function') initCompanyGeo(); })();
 
 // ── DOCK MAGNIFY (macOS-style, vanilla, presentation-only) ──────────────
 (function initDockMagnify(){
