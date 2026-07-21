@@ -917,6 +917,12 @@ body {
 /* ── Import Excel/CSV ── */
 .crm-import-btn { width:100%; margin:2px 0 14px; padding:10px; font-size:12px; font-weight:700; color:#166534; background:#f0fdf4; border:1.5px solid #86efac; border-radius:10px; cursor:pointer; transition:background .15s; }
 .crm-import-btn:hover { background:#dcfce7; }
+/* ── Barre d'administration CRM (UX : contrôles en haut, sans scroller la liste) ── */
+.crm-admin-bar { margin: 0 0 16px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.crm-admin-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.crm-import-btn--bar { width: auto; margin: 0; padding: 8px 14px; }
+.crm-admin-bar .crm-form-card { box-shadow: none; }
+@media (max-width: 760px) { .crm-admin-actions span[style*="flex:1"] { display: none; } }
 .imp-overlay { position:fixed; inset:0; background:rgba(15,23,41,0.55); z-index:3000; display:flex; align-items:center; justify-content:center; padding:18px; }
 .imp-modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; width:100%; max-width:840px; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.35); }
 .imp-head { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
@@ -2797,12 +2803,27 @@ body {
     </div>
 
     <div class="tab-panel" id="panel-crm">
+      <!-- Barre d'administration CRM : accessible sans scroller la liste -->
+      <div class="crm-admin-bar">
+        <div class="crm-admin-actions">
+          <button type="button" class="crm-import-btn crm-import-btn--bar" onclick="triggerCrmImport()">📥 Importer Excel / CSV</button>
+          <input type="file" id="crm-import-input" accept=".xlsx,.xls,.csv" hidden onchange="handleImportFile(this)" />
+          <button class="btn-export" onclick="geocodeMissingProspects()" title="Géocode en arrière-plan les fiches qui ont une adresse mais pas encore de pin sur la carte (~1/seconde, avec cache)">📍 Géocoder les prospects sans coordonnées</button>
+          <button class="btn-export" id="crm-imports-toggle" onclick="toggleImportsCard()" title="Lots d'import : fichier, date, nombre de fiches, suppression par lot">📦 Imports <span id="crm-imports-count"></span></button>
+          <span style="flex:1"></span>
+          <button class="btn-export" onclick="exportCrmCSV()" style="white-space:nowrap">⬇ Exporter CSV</button>
+          <button class="btn-export" onclick="deleteAllCrmProspects()" style="white-space:nowrap;color:#ef4444;border-color:rgba(239,68,68,0.4)" title="Suppression en masse (double confirmation) — commercial : vos prospects · direction : tout le CRM">🗑 Tout supprimer</button>
+        </div>
+        <!-- Lots d'import (rempli par renderImportBatches ; replié par défaut) -->
+        <div class="crm-form-card" id="crm-imports-card" style="margin:10px 0 0;display:none">
+          <div class="crm-form-title" style="font-size:14px">📦 Imports</div>
+          <div id="crm-imports-list"></div>
+        </div>
+      </div>
       <div class="crm-layout">
         <div class="crm-form-col">
           <div class="crm-form-card">
             <div class="crm-form-title" id="crm-form-title">Nouveau prospect</div>
-            <button type="button" class="crm-import-btn" onclick="triggerCrmImport()">📥 Importer un fichier Excel / CSV</button>
-            <input type="file" id="crm-import-input" accept=".xlsx,.xls,.csv" hidden onchange="handleImportFile(this)" />
             <div class="crm-section-label">Informations obligatoires</div>
             <div class="crm-field">
               <label class="crm-label">Nom de l'entreprise <span class="crm-req">*</span></label>
@@ -2883,11 +2904,6 @@ body {
               <button class="btn-primary" id="crm-submit-btn" onclick="submitCrmForm()" style="padding:10px 20px;font-size:13px">Ajouter le prospect</button>
             </div>
           </div>
-          <!-- Lots d'import (rempli par renderImportBatches ; masqué si aucun lot) -->
-          <div class="crm-form-card" id="crm-imports-card" style="margin-top:16px;display:none">
-            <div class="crm-form-title" style="font-size:14px">📦 Imports</div>
-            <div id="crm-imports-list"></div>
-          </div>
         </div>
         <div class="crm-list-col">
           <div class="crm-list-header">
@@ -2908,8 +2924,6 @@ body {
                 </button>
               </div>
               <input class="crm-search" id="crm-search" type="text" placeholder="Rechercher..." oninput="renderCrmList()" />
-              <button class="btn-export" onclick="exportCrmCSV()" style="white-space:nowrap">Exporter CSV</button>
-              <button class="btn-export" onclick="deleteAllCrmProspects()" style="white-space:nowrap;color:#ef4444;border-color:rgba(239,68,68,0.4)" title="Suppression en masse (double confirmation) — commercial : vos prospects · direction : tout le CRM">🗑 Tout supprimer</button>
             </div>
           </div>
           <!-- Commercial filter (only visible in team scope) -->
@@ -5777,50 +5791,115 @@ function _renderImportPreview() {
     : '<div style="padding:16px;font-size:12px;color:var(--text3)">Aucune ligne exploitable — associe au moins la colonne « Entreprise » ou « Contact ».</div>';
 }
 
-function doImport() {
-  const me = localStorage.getItem('ast_commercial') || '';
-  const existing = new Set(crmProspects.filter(p => p.commercial === me).map(p => _importDupKey({ company: p.company, contactName: p.contactName, email: p.email })));
-  const batch = new Set();
-  let added = 0, dups = 0, empty = 0;
-  const now = Date.now();
-  const toAdd = [];
-  _importRows.forEach(row => {
-    const base = _rowToProspect(row);
-    if (!base) { empty++; return; }
-    const key = _importDupKey(base);
-    if (existing.has(key) || batch.has(key)) { dups++; return; }
-    batch.add(key); toAdd.push(base);
-  });
-  const importId = 'imp_' + now;
-  const imported = [];
-  toAdd.forEach((base, i) => {
-    const prospect = {
-      id: now + i, company: base.company, size: base.size, sector: base.sector, address: base.address,
-      contactName: base.contactName, contactTitle: base.contactTitle, phone: base.phone, email: base.email,
-      linkedin: validateLinkedInUrl(base.linkedin, 'person') || '',   // jamais un lien fabriqué
-      notes: [base.notes, '📥 Importé le ' + new Date().toLocaleDateString('fr-FR')].filter(Boolean).join(' · '),
-      status: base.status, commercial: me, createdAt: now + i, lat: null, lng: null,
-      importId
-    };
-    crmProspects.unshift(prospect);
-    imported.push(prospect);
-    added++;
-  });
-  if (added) {
-    saveCrm();
-    const batches = getImportBatches();
-    batches.unshift({ id: importId, filename: _importFileName || 'import', date: new Date().toISOString(), count: added, importedBy: me });
-    saveImportBatches(batches);
-  }
-  if (typeof renderCrmList === 'function') renderCrmList();
-  closeImportModal();
-  alert(`Import terminé : ${added} prospect${added > 1 ? 's' : ''} ajouté${added > 1 ? 's' : ''}` + (dups ? ` · ${dups} doublon(s) ignoré(s)` : '') + (empty ? ` · ${empty} ligne(s) vide(s) ignorée(s)` : '') + '.');
-  geocodeImportedProspects(imported);   // pins carte : géocodage séquentiel en arrière-plan (pipeline existant)
+let _importRunning = false;
+
+function _importStorageErr(e) {
+  const quota = e && (e.name === 'QuotaExceededError' || /quota|exceeded/i.test((e && e.message) || ''));
+  return quota
+    ? "Stockage local du navigateur plein — impossible d'enregistrer les prospects. Supprime d'anciens lots/sauvegardes (ou réduis le fichier), puis réessaie."
+    : "Échec d'enregistrement local : " + ((e && e.message) || e);
 }
 
-// ── Géocodage post-import : séquentiel (~1 req/s, limite Nominatim), non bloquant.
+function _importResultToast(msg, isError) {
+  let el = document.getElementById('import-result-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'import-result-toast';
+    document.body.appendChild(el);
+  }
+  el.style.cssText = 'position:fixed;bottom:64px;right:18px;z-index:9999;max-width:420px;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,0.25);font-family:\'Inter\',sans-serif;'
+    + (isError ? 'background:#b91c1c;color:#fff' : 'background:#16a34a;color:#fff');
+  el.textContent = msg;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.remove(), 9000);
+}
+
+function doImport() {
+  if (_importRunning) return;                     // anti double-clic
+  _importRunning = true;
+  const btn = document.getElementById('imp-do-btn');
+  const btnTxt = document.getElementById('imp-do-text');
+  if (btn) btn.disabled = true;
+  if (btnTxt) btnTxt.textContent = '⏳ Import en cours…';
+
+  const me = localStorage.getItem('ast_commercial') || '';
+  try {
+    // 1) Construction + dédup (contre l'état courant, mémoire = vérité)
+    const existing = new Set(crmProspects.filter(p => p.commercial === me).map(p => _importDupKey({ company: p.company, contactName: p.contactName, email: p.email })));
+    const batchKeys = new Set();
+    let dups = 0, empty = 0;
+    const now = Date.now();
+    const importId = 'imp_' + now;
+    const prospects = [];
+    _importRows.forEach(row => {
+      const base = _rowToProspect(row);
+      if (!base) { empty++; return; }
+      const key = _importDupKey(base);
+      if (existing.has(key) || batchKeys.has(key)) { dups++; return; }
+      batchKeys.add(key);
+      prospects.push({
+        id: now + prospects.length, company: base.company, size: base.size, sector: base.sector, address: base.address,
+        contactName: base.contactName, contactTitle: base.contactTitle, phone: base.phone, email: base.email,
+        linkedin: validateLinkedInUrl(base.linkedin, 'person') || '',   // jamais un lien fabriqué
+        notes: [base.notes, '📥 Importé le ' + new Date().toLocaleDateString('fr-FR')].filter(Boolean).join(' · '),
+        status: base.status, commercial: me, createdAt: now + prospects.length, lat: null, lng: null,
+        importId
+      });
+    });
+
+    // 2) COMMIT — mémoire + localStorage ; rollback mémoire si l'écriture échoue,
+    //    pour qu'un nouvel essai ne voie pas de faux doublons.
+    prospects.forEach(p => crmProspects.unshift(p));
+    if (prospects.length) {
+      try { saveCrm(); }
+      catch (e) {
+        const ids = new Set(prospects.map(p => p.id));
+        crmProspects = crmProspects.filter(p => !ids.has(p.id));
+        throw new Error(_importStorageErr(e));
+      }
+    }
+
+    // 3) Registre des lots — non fatal, mais signalé (l'auto-réparation le
+    //    reconstruira de toute façon depuis les importId des fiches).
+    let batchWarn = '';
+    if (prospects.length) {
+      try {
+        const batches = getImportBatches();
+        batches.unshift({ id: importId, filename: _importFileName || 'import', date: new Date().toISOString(), count: prospects.length, importedBy: me });
+        saveImportBatches(batches);
+      } catch (e) { console.warn('[NEXUM import] Lot non enregistré (sera auto-réparé) :', e); batchWarn = ' · ⚠ lot enregistré en différé'; }
+    }
+
+    // 4) UI : fermer la modale, rafraîchir, résumé clair — chaque étape best-effort.
+    closeImportModal();
+    try { if (typeof renderCrmList === 'function') renderCrmList(); }
+    catch (e) { console.warn('[NEXUM import] Rafraîchissement de la liste :', e); }
+    _importResultToast(
+      `✅ Import terminé : ${prospects.length} ajouté${prospects.length > 1 ? 's' : ''}`
+      + (dups ? ` · ${dups} doublon${dups > 1 ? 's' : ''} ignoré${dups > 1 ? 's' : ''}` : '')
+      + (empty ? ` · ${empty} ligne${empty > 1 ? 's' : ''} vide${empty > 1 ? 's' : ''}` : '')
+      + batchWarn
+    );
+
+    // 5) Géocodage APRÈS le commit, asynchrone, jamais bloquant ni fatal.
+    geocodeImportedProspects(prospects);
+  } catch (e) {
+    console.error('[NEXUM import] Échec :', e);
+    const msg = 'Import impossible — ' + ((e && e.message) || e);
+    const stats = document.getElementById('imp-stats');
+    if (stats) stats.innerHTML = `<div style="color:#b91c1c;font-weight:700;font-size:12px">⚠ ${_esc0(msg)}</div>`;
+    _importResultToast('⚠ ' + msg, true);
+  } finally {
+    _importRunning = false;
+    if (btn) btn.disabled = false;
+    if (btnTxt) btnTxt.textContent = 'Importer';
+  }
+}
+
+// ── Géocodage : séquentiel (~1 req/s Nominatim), avec cache, non bloquant.
 // Réutilise le pipeline existant addCrmToMap → geocodeCompany → ast_map_companies.
 let _geoQueue = [], _geoRunning = false;
+let _geoStats = { ok: 0, fail: 0, noAddr: 0 };
 
 function _geoProgressToast() {
   let el = document.getElementById('geo-progress-toast');
@@ -5833,50 +5912,129 @@ function _geoProgressToast() {
   return el;
 }
 
+function _mapEntryFor(p) {
+  return mapCompanies.find(c => c.id === p.id || (c.name || '').toLowerCase() === (p.company || '').toLowerCase());
+}
+
 function geocodeImportedProspects(prospects) {
-  // Sans adresse → pas de géocodage ; déjà des coordonnées → jamais re-géocodé.
-  const eligible = (prospects || []).filter(p => p && p.address && (p.lat == null || p.lng == null));
+  const list = prospects || [];
+  // Sans adresse → ignoré silencieusement (compté dans le résumé) ; avec coordonnées → jamais re-géocodé.
+  const eligible = list.filter(p => p && (p.address || '').trim() && (p.lat == null || p.lng == null));
+  _geoStats.noAddr += list.length - eligible.length;
   if (!eligible.length) return;
   _geoQueue.push(...eligible);
   if (!_geoRunning) _runGeoQueue();
 }
 
+// Rétroactif : géocode les fiches qui ont une adresse mais aucun pin (bouton barre admin).
+function geocodeMissingProspects() {
+  const noAddrCount = crmProspects.filter(p => !((p.address || '').trim())).length;
+  const targets = crmProspects.filter(p => {
+    if (!((p.address || '').trim())) return false;
+    const e = _mapEntryFor(p);
+    return !e || e.lat == null || e.lng == null;
+  });
+  if (!targets.length) {
+    alert('Rien à géocoder : toutes les fiches avec adresse ont déjà leurs coordonnées.'
+      + (noAddrCount ? ` (${noAddrCount} fiche${noAddrCount > 1 ? 's' : ''} sans adresse.)` : ''));
+    return;
+  }
+  const mins = Math.max(1, Math.ceil(targets.length * 1.1 / 60));
+  if (!confirm(`Géocoder ${targets.length} prospect${targets.length > 1 ? 's' : ''} sans coordonnées ?\nEnviron ${mins} min, en arrière-plan (la progression s'affiche en bas à droite).`)) return;
+  _geoStats.noAddr += noAddrCount;
+  geocodeImportedProspects(targets);
+}
+
 async function _runGeoQueue() {
   _geoRunning = true;
-  let done = 0, ok = 0, fail = 0;
+  let done = 0;
   const el = _geoProgressToast();
   while (_geoQueue.length) {
     const p = _geoQueue.shift();
     el.textContent = `📍 Géocodage ${done + 1}/${done + 1 + _geoQueue.length}…`;
     // Prospect supprimé entre-temps (ex: suppression du lot) → ne pas recréer de pin
     if (!crmProspects.some(c => c.id === p.id)) { done++; continue; }
+    let usedNetwork = false;
     try {
-      await addCrmToMap(p);
-      const co = mapCompanies.find(c => c.id === p.id);
-      if (co && co.lat != null) ok++;
-      else { fail++; console.warn('[NEXUM import] Adresse introuvable :', p.company, '—', p.address); }
-    } catch (e) { fail++; console.warn('[NEXUM import] Géocodage échoué :', p.company, e); }
+      let entry = _mapEntryFor(p);
+      if (entry && entry.lat != null && entry.lng != null) { done++; continue; }   // déjà localisé
+      if (!entry) {
+        await addCrmToMap(p);                    // crée l'entrée + géocode (pipeline existant)
+      } else {
+        // Entrée existante sans coordonnées (ex: créée au démarrage) → géocodage direct + mise à jour
+        const coords = await geocodeCompany(p.company, p.address);
+        if (coords) {
+          entry.lat = coords.lat; entry.lng = coords.lng;
+          saveMapCompanies();
+          if (mapObj) { addMarker(entry); renderMapSidebar(); }
+        }
+      }
+      usedNetwork = !_geoLastFromCache;
+      entry = _mapEntryFor(p);
+      if (entry && entry.lat != null) _geoStats.ok++;
+      else { _geoStats.fail++; console.warn('[NEXUM géocodage] Adresse introuvable :', p.company, '—', p.address); }
+    } catch (e) { _geoStats.fail++; usedNetwork = true; console.warn('[NEXUM géocodage] Échec :', p.company, e); }
     done++;
-    if (_geoQueue.length) await new Promise(r => setTimeout(r, 1100)); // 1 req/s Nominatim
+    // 1 req/s Nominatim — inutile d'attendre après un résultat servi par le cache
+    if (_geoQueue.length && usedNetwork) await new Promise(r => setTimeout(r, 1100));
   }
-  el.textContent = `📍 Géocodage terminé : ${ok} pin${ok > 1 ? 's' : ''} ajouté${ok > 1 ? 's' : ''}` + (fail ? ` · ${fail} adresse${fail > 1 ? 's' : ''} introuvable${fail > 1 ? 's' : ''}` : '');
-  setTimeout(() => { const t = document.getElementById('geo-progress-toast'); if (t) t.remove(); }, 6000);
+  const s = _geoStats;
+  el.textContent = `📍 Géocodage terminé : ${s.ok} localisé${s.ok > 1 ? 's' : ''}`
+    + (s.fail ? ` · ${s.fail} non trouvé${s.fail > 1 ? 's' : ''}` : '')
+    + (s.noAddr ? ` · ${s.noAddr} sans adresse` : '');
+  _geoStats = { ok: 0, fail: 0, noAddr: 0 };
+  setTimeout(() => { const t = document.getElementById('geo-progress-toast'); if (t) t.remove(); }, 9000);
   _geoRunning = false;
   if (mapObj) renderMapSidebar();
 }
 
 // ══════════════ LOTS D'IMPORT + SUPPRESSIONS EN MASSE ══════════════
-function getImportBatches() { return JSON.parse(localStorage.getItem('ast_import_batches') || '[]'); }
+function getImportBatches() { try { return JSON.parse(localStorage.getItem('ast_import_batches') || '[]'); } catch (e) { return []; } }
 function saveImportBatches(d) { localStorage.setItem('ast_import_batches', JSON.stringify(d)); syncPush(); }
+
+// Auto-réparation : des fiches portent un importId absent du registre (import interrompu
+// avant l'enregistrement du lot) → on reconstruit l'entrée depuis les fiches elles-mêmes.
+function reconcileImportBatches() {
+  let batches = getImportBatches();
+  const known = new Set(batches.map(b => b.id));
+  const orphans = {};
+  crmProspects.forEach(p => {
+    if (!p.importId || known.has(p.importId)) return;
+    const o = orphans[p.importId] || (orphans[p.importId] = { id: p.importId, filename: 'Import (récupéré)', date: null, count: 0, importedBy: p.commercial || '?' });
+    o.count++;
+    const d = new Date(p.createdAt || Date.now()).toISOString();
+    if (!o.date || d < o.date) o.date = d;
+  });
+  const found = Object.values(orphans);
+  if (found.length) {
+    batches = found.concat(batches);
+    try { saveImportBatches(batches); console.warn('[NEXUM] ' + found.length + ' lot(s) d\'import récupéré(s) depuis les fiches.'); }
+    catch (e) { console.warn('[NEXUM] Lots récupérés non persistés :', e); }
+  }
+  return batches;
+}
+
+let _importsCardOpen = false;
+function toggleImportsCard() {
+  _importsCardOpen = !_importsCardOpen;
+  renderImportBatches();
+}
 
 function renderImportBatches() {
   const card = document.getElementById('crm-imports-card');
   const list = document.getElementById('crm-imports-list');
   if (!card || !list) return;
   const me = localStorage.getItem('ast_commercial') || '';
-  let batches = getImportBatches();
+  let batches = reconcileImportBatches();
   if (!isDirector()) batches = batches.filter(b => b.importedBy === me);   // isolation : chacun ses lots
-  if (!batches.length) { card.style.display = 'none'; return; }
+  const badge = document.getElementById('crm-imports-count');
+  if (badge) badge.textContent = batches.length ? '(' + batches.length + ')' : '';
+  if (!_importsCardOpen) { card.style.display = 'none'; return; }
+  if (!batches.length) {
+    card.style.display = 'block';
+    list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:6px 2px">Aucun lot d\'import pour l\'instant.</div>';
+    return;
+  }
   card.style.display = 'block';
   list.innerHTML = batches.map(b => {
     const remaining = crmProspects.filter(p => p.importId === b.id).length;
@@ -6641,7 +6799,8 @@ function submitCrmForm() {
   setTimeout(() => { btn.textContent = 'Ajouter le prospect'; btn.style.background = ''; }, 1800);
 }
 
-function addCrmToMap(prospect) {
+function addCrmToMap(prospect, opts) {
+  const deferGeocode = !!(opts && opts.deferGeocode);   // crée/synchronise l'entrée SANS appel Nominatim
   const existing = mapCompanies.find(c =>
     c.id === prospect.id || c.name.toLowerCase() === prospect.company.toLowerCase()
   );
@@ -6659,6 +6818,7 @@ function addCrmToMap(prospect) {
       existing.lat = null; existing.lng = null;
       if (mapMarkers[existing.id]) { mapMarkers[existing.id].remove(); delete mapMarkers[existing.id]; }
       saveMapCompanies();
+      if (deferGeocode) return;
       return geocodeCompany(prospect.company, prospect.address).then(coords => {
         if (!coords) return;
         existing.lat = coords.lat; existing.lng = coords.lng;
@@ -6689,6 +6849,7 @@ function addCrmToMap(prospect) {
   };
   mapCompanies.push(entry);
   saveMapCompanies();
+  if (deferGeocode) return;
   return geocodeCompany(prospect.company, prospect.address).then(coords => {
     if (!coords) return;
     const co = mapCompanies.find(c => c.id === entry.id);
@@ -6878,9 +7039,12 @@ function renderCrmList() {
 
 // On app load, sync existing CRM entries to map
 function syncCrmToMap() {
+  // deferGeocode : au démarrage on crée seulement les entrées manquantes, SANS rafale
+  // parallèle vers Nominatim (rate-limit → échecs silencieux jamais retentés).
+  // Le géocodage se fait via l'import ou le bouton « Géocoder les prospects sans coordonnées ».
   crmProspects.forEach(p => {
     const existing = mapCompanies.find(c => c.id === p.id || c.name.toLowerCase() === p.company.toLowerCase());
-    if (!existing) addCrmToMap(p);
+    if (!existing) addCrmToMap(p, { deferGeocode: true });
   });
 }
 
@@ -6899,16 +7063,43 @@ const STATUS_CONFIG = {
 
 // saveMapCompanies defined by sync engine below
 
+// ── Cache de géocodage par adresse normalisée (villes répétées, ré-imports : zéro requête).
+// Clé volontairement locale à l'appareil (comme ast_api_key) : c'est un cache, pas une donnée
+// d'équipe — il se reconstruit tout seul et garde aussi les échecs pour ne pas re-interroger.
+let _geoCache = null;
+let _geoLastFromCache = false;
+function _geoCacheKey(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); }
+function _geoCacheLoad() {
+  if (!_geoCache) { try { _geoCache = JSON.parse(localStorage.getItem('ast_geo_cache') || '{}'); } catch (e) { _geoCache = {}; } }
+  return _geoCache;
+}
+function _geoCacheStore(key, coords) {
+  const c = _geoCacheLoad();
+  c[key] = coords ? { lat: coords.lat, lng: coords.lng } : { nf: 1 };
+  try { localStorage.setItem('ast_geo_cache', JSON.stringify(c)); } catch (e) {}
+}
+
 async function geocodeCompany(name, location) {
+  _geoLastFromCache = false;
   if (!location && !name) return null;
+  const loc = String(location || '').trim();
 
-  // Build ordered list of queries to try
+  const cacheKey = _geoCacheKey(loc || name);
+  const hit = _geoCacheLoad()[cacheKey];
+  if (hit) { _geoLastFromCache = true; return hit.nf ? null : { lat: hit.lat, lng: hit.lng }; }
+
+  // « , France » par défaut quand aucun pays n'est présent (adresses type "22640 PLESTAN")
+  const hasCountry = /\b(france|belgique|belgium|luxembourg|suisse|switzerland|espagne|spain|italie|italy|allemagne|germany|portugal|pays[- ]bas|netherlands|royaume[- ]uni|united kingdom|monaco|andorre)\b/i.test(loc);
+  const withFr = s => (s && !hasCountry) ? s + ', France' : s;
+
+  // Ordre : adresse complète → repli niveau ville (sans code postal / n° de rue) → nom + adresse
   const queries = [];
-  if (location) queries.push(location);
-  if (location && name) queries.push(`${name} ${location}`);
+  if (loc) queries.push(withFr(loc));
+  const cityOnly = loc.replace(/\b\d{5}\b/g, ' ').replace(/^\s*\d+[,\s]+/, '').replace(/\s+/g, ' ').trim();
+  if (cityOnly && cityOnly.toLowerCase() !== loc.toLowerCase()) queries.push(withFr(cityOnly));
+  if (loc && name) queries.push(`${name} ${withFr(loc)}`);
 
-  // Extract postal code for fallback
-  const postalMatch = (location||'').match(/\b(\d{5})\b/);
+  const postalMatch = loc.match(/\b(\d{5})\b/);
 
   for (const q of queries) {
     try {
@@ -6917,22 +7108,29 @@ async function geocodeCompany(name, location) {
       if (!r.ok) continue;
       const d = await r.json();
       if (d && d.length > 0 && d[0].lat) {
-        return { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) };
+        const coords = { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) };
+        _geoCacheStore(cacheKey, coords);
+        return coords;
       }
     } catch(e) { console.warn('Geocode attempt failed:', q, e); }
     await new Promise(r => setTimeout(r, 200));
   }
 
-  // Fallback: postal code only
+  // Fallback: code postal seul
   if (postalMatch) {
     try {
       const url = `https://nominatim.openstreetmap.org/search?q=${postalMatch[1]}+France&limit=1&format=json`;
       const r = await fetch(url);
       const d = await r.json();
-      if (d && d.length > 0) return { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) };
+      if (d && d.length > 0) {
+        const coords = { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) };
+        _geoCacheStore(cacheKey, coords);
+        return coords;
+      }
     } catch(e) {}
   }
 
+  _geoCacheStore(cacheKey, null);
   return null;
 }
 
