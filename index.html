@@ -2470,6 +2470,13 @@ body {
         <div id="admin-result" style="margin-top:8px"></div>
       </div>
 
+      <div class="field-label" style="margin-top:14px">🗄️ Stockage local de cet appareil</div>
+      <div id="storage-panel" class="storage-panel-target" style="font-size:11px;color:var(--text2)"></div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn-export" onclick="storageCleanup()" style="font-size:12px">🧹 Nettoyer le stockage</button>
+        <button class="btn-export" onclick="renderStoragePanel()" style="font-size:12px">↺ Actualiser</button>
+      </div>
+
       <button class="btn-primary" onclick="saveAdminConfig()" style="margin-top:14px;background:var(--navy);font-size:13px;padding:9px 18px">
         💾 Enregistrer la configuration
       </button>
@@ -2514,6 +2521,9 @@ body {
             🗑️ Supprimer la photo
           </button>
           <div class="profile-dropdown-divider"></div>
+          <button class="profile-dropdown-btn" onclick="openStorageModal(); closeProfileDropdown()">
+            🗄️ Stockage local de l'appareil
+          </button>
           <button class="profile-dropdown-btn" onclick="exportBackup(); closeProfileDropdown()">
             💾 Exporter une sauvegarde
           </button>
@@ -3150,6 +3160,23 @@ body {
     </div>
 
     <!-- DEAL MODAL -->
+    <!-- MODALE STOCKAGE (accessible via le menu avatar) -->
+    <div id="storage-modal" class="mkt-modal-overlay" style="display:none" onclick="if(event.target===this)closeStorageModal()">
+      <div class="mkt-modal" style="max-width:520px">
+        <div class="mkt-modal-header">
+          <div class="mkt-modal-title">🗄️ Stockage local de cet appareil</div>
+          <button class="mkt-modal-close" onclick="closeStorageModal()">✕</button>
+        </div>
+        <div style="padding:14px 24px 20px;font-size:11px;color:var(--text2)">
+          <div class="storage-panel-target"></div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn-export" onclick="storageCleanup()" style="font-size:12px">🧹 Nettoyer le stockage</button>
+            <button class="btn-export" onclick="renderStoragePanel()" style="font-size:12px">↺ Actualiser</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="deal-modal" class="mkt-modal-overlay" style="display:none" onclick="if(event.target===this)closeDealModal()">
       <div class="mkt-modal" style="max-width:640px">
         <div class="mkt-modal-header">
@@ -5846,6 +5873,27 @@ function doImport() {
         importId
       });
     });
+
+    // 2a) PRÉ-VÉRIFICATION quota : sonde AVANT toute écriture. Si ça ne tient pas,
+    //     on le dit tout de suite (manque estimé) et on propose le nettoyage —
+    //     au lieu d'échouer en pleine écriture. Rien n'est committé ici.
+    if (prospects.length) {
+      const needChars = JSON.stringify(prospects).length + 2048;   // + marge (registre de lots, divers)
+      const needKo = needChars * 2 / 1024;
+      if (!_storageProbe(needChars)) {
+        const plan = _storageCleanupPlan();
+        if (plan.freedKo > 4 && confirm(
+          `Espace de stockage insuffisant pour cet import (≈ ${needKo.toFixed(0)} Ko nécessaires).\n\n`
+          + `Le nettoyage peut libérer ≈ ${plan.freedKo.toFixed(0)} Ko :\n`
+          + plan.actions.map(a => `• ${a.label}`).join('\n')
+          + `\n\nNettoyer maintenant puis continuer l'import ?`)) {
+          _applyCleanupPlan(plan);
+        }
+        if (!_storageProbe(needChars)) {
+          throw new Error(`espace de stockage insuffisant (il faut ≈ ${needKo.toFixed(0)} Ko de plus). Ouvre l'avatar (en haut à droite) → « 🗄️ Stockage local de l'appareil » pour voir ce qui occupe la place. Rien n'a été importé.`);
+        }
+      }
+    }
 
     // 2) COMMIT — mémoire + localStorage ; rollback mémoire si l'écriture échoue,
     //    pour qu'un nouvel essai ne voie pas de faux doublons.
@@ -10877,6 +10925,171 @@ function localHasSharedData() {
   try { const fi = JSON.parse(localStorage.getItem('ast_fiches') || 'null'); if (Array.isArray(fi) ? fi.length : !!fi) return true; } catch(e){}
   return false;
 }
+// ══════════════ STOCKAGE LOCAL : mesure, compression, nettoyage ══════════════
+const AST_QUOTA_KO = 5120;      // quota localStorage typique (~5 Mo en UTF-16)
+const AST_BACKUP_KEEP = 3;      // snapshots de sécurité conservés (compressés)
+
+// — Compression LZW inline (vanilla, zéro dépendance). L'entrée passe par
+//   encodeURIComponent (ASCII sûr, accents inclus) ; les codes sortent dans la
+//   plage 0x20..0xCFFF (jamais de surrogates) → chaîne UTF-16 valide.
+function _lzCompress(input) {
+  const s = encodeURIComponent(input);
+  const OFF = 0x20, CAP = 0xD000 - OFF;
+  const dict = new Map();
+  for (let i = 0; i < 128; i++) dict.set(String.fromCharCode(i), i);
+  let next = 128, w = '', out = '';
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i], wc = w + c;
+    if (dict.has(wc)) { w = wc; continue; }
+    out += String.fromCharCode(dict.get(w) + OFF);
+    if (next < CAP) dict.set(wc, next++);
+    w = c;
+  }
+  if (w) out += String.fromCharCode(dict.get(w) + OFF);
+  return out;
+}
+function _lzDecompress(z) {
+  const OFF = 0x20, CAP = 0xD000 - OFF;
+  const dict = [];
+  for (let i = 0; i < 128; i++) dict[i] = String.fromCharCode(i);
+  let next = 128;
+  let prev = dict[z.charCodeAt(0) - OFF], out = prev;
+  for (let i = 1; i < z.length; i++) {
+    const k = z.charCodeAt(i) - OFF;
+    let entry;
+    if (dict[k] !== undefined) entry = dict[k];
+    else if (k === next) entry = prev + prev[0];
+    else throw new Error('Sauvegarde compressée corrompue');
+    out += entry;
+    if (next < CAP) dict[next++] = prev + entry[0];
+    prev = entry;
+  }
+  return decodeURIComponent(out);
+}
+// Lecture d'un snapshot (nouveau format compressé {z} ou legacy {data})
+function readLocalBackup(entry) { return entry && entry.z ? JSON.parse(_lzDecompress(entry.z)) : (entry && entry.data) || null; }
+
+// — Mesure du stockage —
+function storageKeyKo(k) { const v = localStorage.getItem(k); return v == null ? 0 : (k.length + v.length) * 2 / 1024; }
+function storageReport() {
+  const rows = []; let total = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (!k || !k.startsWith('ast_')) continue;
+    const ko = storageKeyKo(k); rows.push({ key: k, ko }); total += ko;
+  }
+  rows.sort((a, b) => b.ko - a.ko);
+  return { rows, total };
+}
+// Sonde : est-ce qu'un contenu de N caractères supplémentaires tient encore ?
+function _storageProbe(chars) {
+  try {
+    localStorage.setItem('ast_quota_probe', new Array(Math.max(1, chars) + 1).join('x'));
+    localStorage.removeItem('ast_quota_probe');
+    return true;
+  } catch (e) { try { localStorage.removeItem('ast_quota_probe'); } catch (_) {} return false; }
+}
+
+function openStorageModal() {
+  const m = document.getElementById('storage-modal');
+  if (m) { m.style.display = 'flex'; renderStoragePanel(); }
+}
+function closeStorageModal() { const m = document.getElementById('storage-modal'); if (m) m.style.display = 'none'; }
+
+function renderStoragePanel() {
+  const targets = document.querySelectorAll('.storage-panel-target');
+  if (!targets.length) return;
+  const { rows, total } = storageReport();
+  const pct = Math.min(100, total / AST_QUOTA_KO * 100);
+  const barColor = pct > 85 ? '#ef4444' : pct > 60 ? '#f59e0b' : '#16a34a';
+  let html = `<div style="margin:6px 0 8px">
+    <div style="display:flex;justify-content:space-between;font-weight:700"><span>Total données NEXUM</span><span>${total.toFixed(0)} Ko / ~${AST_QUOTA_KO} Ko (${pct.toFixed(0)} %)</span></div>
+    <div style="height:8px;background:var(--bg);border:1px solid var(--border);border-radius:5px;overflow:hidden;margin-top:3px"><div style="height:100%;width:${pct.toFixed(1)}%;background:${barColor}"></div></div>
+  </div>`;
+  const maxKo = rows.length ? rows[0].ko : 1;
+  html += rows.slice(0, 14).map(r => `<div style="display:flex;align-items:center;gap:8px;margin:2px 0">
+    <span style="flex:0 0 165px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:10px" title="${_esc0(r.key)}">${_esc0(r.key)}</span>
+    <div style="flex:1;height:6px;background:var(--bg);border-radius:4px;overflow:hidden"><div style="height:100%;width:${Math.max(2, r.ko / maxKo * 100).toFixed(1)}%;background:var(--navy)"></div></div>
+    <span style="flex:0 0 60px;text-align:right">${r.ko >= 100 ? r.ko.toFixed(0) : r.ko.toFixed(1)} Ko</span>
+  </div>`).join('');
+  if (rows.length > 14) html += `<div style="color:var(--text3);margin-top:3px">… + ${rows.length - 14} autre${rows.length - 14 > 1 ? 's' : ''} clé${rows.length - 14 > 1 ? 's' : ''}</div>`;
+  targets.forEach(t => { t.innerHTML = html; });
+}
+
+// — Plan de nettoyage (avec estimation par action) — ne touche JAMAIS aux données
+//   actives : CRM, carte, deals, séquences, conversations existantes.
+function _storageCleanupPlan() {
+  const plan = { actions: [], freedKo: 0 };
+  const push = (label, ko, apply) => { if (ko > 0.5) { plan.actions.push({ label, ko, apply }); plan.freedKo += ko; } };
+  // 1) Sauvegardes de secours : cap à AST_BACKUP_KEEP + compression des snapshots legacy
+  try {
+    const raw = localStorage.getItem('ast_backups');
+    if (raw) {
+      const list = JSON.parse(raw);
+      const newList = list.slice(-AST_BACKUP_KEEP).map(e => {
+        if (e.z || !e.data) return e;
+        try { return { ts: e.ts, reason: e.reason, z: _lzCompress(JSON.stringify(e.data)) }; } catch (err) { return e; }
+      });
+      const gain = (raw.length - JSON.stringify(newList).length) * 2 / 1024;
+      push(`Sauvegardes de secours : ${list.length} → ${newList.length}, compressées`, gain,
+        () => localStorage.setItem('ast_backups', JSON.stringify(newList)));
+    }
+  } catch (e) {}
+  // 2) Messagerie : threads orphelins (conversations supprimées) + agrégat trié
+  try {
+    const convIds = new Set((JSON.parse(localStorage.getItem('ast_convs') || '[]') || []).map(c => String(c.id)));
+    const orphans = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('ast_msgs_') && !convIds.has(k.slice(9))) orphans.push(k);
+    }
+    let ko = orphans.reduce((s, k) => s + storageKeyKo(k), 0);
+    let allTrim = null;
+    const allRaw = localStorage.getItem('ast_all_msgs');
+    if (allRaw) {
+      const all = JSON.parse(allRaw); const kept = {};
+      Object.keys(all).forEach(id => { if (convIds.has(String(id))) kept[id] = all[id]; });
+      const after = JSON.stringify(kept).length;
+      if (after < allRaw.length) { allTrim = kept; ko += (allRaw.length - after) * 2 / 1024; }
+    }
+    if (orphans.length || allTrim) push(`Messagerie : ${orphans.length} thread${orphans.length > 1 ? 's' : ''} orphelin${orphans.length > 1 ? 's' : ''} purgé${orphans.length > 1 ? 's' : ''}${allTrim ? ' + agrégat allégé' : ''}`, ko,
+      () => { orphans.forEach(k => localStorage.removeItem(k)); if (allTrim) localStorage.setItem('ast_all_msgs', JSON.stringify(allTrim)); });
+  } catch (e) {}
+  // 3) Historique de recherche : cap 8 (normalement déjà borné)
+  try {
+    const raw = localStorage.getItem('ast_history');
+    if (raw) { const h = JSON.parse(raw); if (Array.isArray(h) && h.length > 8) push('Historique de recherche : cap à 8 entrées', (raw.length - JSON.stringify(h.slice(0, 8)).length) * 2 / 1024, () => localStorage.setItem('ast_history', JSON.stringify(h.slice(0, 8)))); }
+  } catch (e) {}
+  // 4) Cache de géocodage : cap 2000 adresses
+  try {
+    const raw = localStorage.getItem('ast_geo_cache');
+    if (raw) {
+      const c = JSON.parse(raw); const keys = Object.keys(c);
+      if (keys.length > 2000) {
+        const kept = {}; keys.slice(-2000).forEach(k => kept[k] = c[k]);
+        push(`Cache géocodage : ${keys.length} → 2000 adresses`, (raw.length - JSON.stringify(kept).length) * 2 / 1024, () => localStorage.setItem('ast_geo_cache', JSON.stringify(kept)));
+      }
+    }
+  } catch (e) {}
+  return plan;
+}
+
+function _applyCleanupPlan(plan) {
+  plan.actions.forEach(a => { try { a.apply(); } catch (e) { console.warn('[NEXUM stockage]', a.label, e); } });
+  if (typeof renderStoragePanel === 'function') renderStoragePanel();
+}
+
+function storageCleanup() {
+  const plan = _storageCleanupPlan();
+  if (!plan.actions.length) { alert('Rien à nettoyer — le stockage est déjà propre.'); renderStoragePanel(); return; }
+  const msg = 'Nettoyer le stockage ? Aperçu :\n\n'
+    + plan.actions.map(a => `• ${a.label} (≈ ${a.ko.toFixed(0)} Ko)`).join('\n')
+    + `\n\nTotal libéré : ≈ ${plan.freedKo.toFixed(0)} Ko.\nAucune donnée active (CRM, carte, deals, séquences, conversations existantes) n'est touchée.`;
+  if (!confirm(msg)) return;
+  _applyCleanupPlan(plan);
+  alert(`✅ Nettoyage terminé : ≈ ${plan.freedKo.toFixed(0)} Ko libérés.`);
+}
+
 // Rolling local safety backups (keeps the last good snapshots on this device).
 function snapshotLocalBackup(reason) {
   if (!localHasSharedData()) return;              // never back up an empty state
@@ -10886,8 +11099,11 @@ function snapshotLocalBackup(reason) {
   const data = {};
   keys.forEach(k => { const v = localStorage.getItem(k); if (v != null) data[k] = v; });
   let list; try { list = JSON.parse(localStorage.getItem('ast_backups') || '[]'); } catch(e) { list = []; }
-  list.push({ ts: new Date().toISOString(), reason: reason || '', data });
-  while (list.length > 4) list.shift();           // keep the last 4
+  // Snapshot compressé (LZ) — divise le poids par ~3-5 ; lecture via readLocalBackup(entry).
+  const entry = { ts: new Date().toISOString(), reason: reason || '' };
+  try { entry.z = _lzCompress(JSON.stringify(data)); } catch(e) { entry.data = data; }
+  list.push(entry);
+  while (list.length > AST_BACKUP_KEEP) list.shift();
   try { localStorage.setItem('ast_backups', JSON.stringify(list)); } catch(e){}
 }
 
@@ -11109,6 +11325,7 @@ const PROFILE_PASSWORDS = {
 function toggleAdminPanel() {
   const panel = document.getElementById('admin-panel');
   panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  if (panel.style.display === 'block' && typeof renderStoragePanel === 'function') renderStoragePanel();
   // Pre-fill existing values
   const existingKey = localStorage.getItem('ast_api_key');
   const existingSync = localStorage.getItem('ast_sync_key');
