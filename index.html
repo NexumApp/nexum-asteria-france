@@ -2820,6 +2820,7 @@ body {
           <input type="file" id="crm-import-input" accept=".xlsx,.xls,.csv" hidden onchange="handleImportFile(this)" />
           <button class="btn-export" onclick="geocodeMissingProspects()" title="Géocode en arrière-plan les fiches qui ont une adresse mais pas encore de pin sur la carte (~1/seconde, avec cache)">📍 Géocoder les prospects sans coordonnées</button>
           <button class="btn-export" id="crm-imports-toggle" onclick="toggleImportsCard()" title="Lots d'import : fichier, date, nombre de fiches, suppression par lot">📦 Imports <span id="crm-imports-count"></span></button>
+          <button class="btn-export" id="crm-merge-btn" onclick="crmMergeDuplicates()" style="display:none;color:#b45309;border-color:rgba(245,158,11,0.5)" title="Fusionne les fiches d'une même entreprise (même commercial) en une fiche multi-contacts — aperçu avant application">🔗 Fusionner les doublons <span id="crm-merge-count"></span></button>
           <span style="flex:1"></span>
           <button class="btn-export" onclick="exportCrmCSV()" style="white-space:nowrap">⬇ Exporter CSV</button>
           <button class="btn-export" onclick="deleteAllCrmProspects()" style="white-space:nowrap;color:#ef4444;border-color:rgba(239,68,68,0.4)" title="Suppression en masse (double confirmation) — commercial : vos prospects · direction : tout le CRM">🗑 Tout supprimer</button>
@@ -2967,6 +2968,12 @@ body {
                 </select>
                 <button class="crm-btn-cancel" onclick="clearProspectSelect()" style="padding:0 10px;font-size:18px;flex-shrink:0" title="Saisie manuelle">✕</button>
               </div>
+            </div>
+            <div class="crm-field" id="oa-contact-select-wrap" style="display:none">
+              <label class="crm-label">Contact ciblé</label>
+              <select class="crm-input" id="oa-contact-select" onchange="onSeqContactSelect(this.value)">
+                <option value="">— Aucun —</option>
+              </select>
             </div>
             <div id="oa-manual-fields">
               <div class="crm-field-row">
@@ -4791,7 +4798,11 @@ function addSearchResultToCRM(payload) {
     x.company && co.name && x.company.toLowerCase() === co.name.toLowerCase()
   );
   if (existing) {
-    btn.textContent = '✓ Déjà dans le CRM';
+    // Modèle entreprise : on enrichit la fiche existante avec ce contact (dédup).
+    ensureContactsArray(existing);
+    const r = addContactToCompany(existing, { nom: p.name || '', fonction: p.title || '', email: p.email || co.email || '', telephone: p.phone || co.phone || '', linkedin: validateLinkedInUrl(p.linkedin, 'person') || '', notes: '' });
+    if (r === 'added') { syncLegacyContactFields(existing); saveCrm(); if (typeof renderCrmList === 'function') renderCrmList(); }
+    btn.textContent = r === 'added' ? '✓ Fiche enrichie' : '✓ Déjà dans le CRM';
     btn.classList.add('added');
     return;
   }
@@ -4823,7 +4834,8 @@ function addSearchResultToCRM(payload) {
     lat: null, lng: null,
   };
 
-  // Add to memory array
+  // Add to memory array (champs plats → tableau contacts, principal)
+  ensureContactsArray(newEntry);
   crmProspects.push(newEntry);
   // Save to localStorage immediately
   localStorage.setItem('ast_crm', JSON.stringify(crmProspects));
@@ -5202,9 +5214,22 @@ function addCardToCRM() {
     createdAt: Date.now(),
     lat: null, lng: null
   };
-  crmProspects.unshift(prospect);
+  // Modèle entreprise : la société existe déjà chez ce commercial ? → on ajoute le contact.
+  const existingCo = findCompanyFor(company, prospect.commercial);
+  let rec = prospect;
+  if (existingCo) {
+    rec = existingCo;
+    ensureContactsArray(existingCo);
+    addContactToCompany(existingCo, { nom: prospect.contactName, fonction: prospect.contactTitle, email: prospect.email, telephone: prospect.phone, linkedin: prospect.linkedin, notes: '' });
+    ['sector', 'size', 'address'].forEach(f => { if (!existingCo[f] && prospect[f]) existingCo[f] = prospect[f]; });
+    if (notes && !(existingCo.notes || '').includes(notes)) existingCo.notes = [existingCo.notes, notes].filter(Boolean).join(' · ');
+    syncLegacyContactFields(existingCo);
+  } else {
+    ensureContactsArray(prospect);   // champs plats → contacts[0] principal
+    crmProspects.unshift(prospect);
+  }
   saveCrm();
-  if (typeof addCrmToMap === 'function') addCrmToMap(prospect);
+  if (typeof addCrmToMap === 'function') addCrmToMap(rec);
   if (typeof renderCrmList === 'function') renderCrmList();
 
   // Confirmation + enchaînement (utile en salon)
@@ -5581,10 +5606,15 @@ function piaCardHtml(id, p) {
 
 // ── Ajout CRM (dédup règle import, blocage si incomplet, pin carte) ───
 function _piaIsDup(p) {
+  // Modèle entreprise : doublon = l'entreprise existe ET le contact proposé y est déjà
+  // (ou aucun contact à ajouter). Sinon la fiche sera ENRICHIE, pas dupliquée.
   const me = localStorage.getItem('ast_commercial') || '';
-  const key = _importDupKey({ company: p.name, contactName: p.contactName || '', email: p.email || '' });
-  return crmProspects.some(x => x.commercial === me &&
-    _importDupKey({ company: x.company, contactName: x.contactName, email: x.email }) === key);
+  const company = findCompanyFor(p.name, me);
+  if (!company) return false;
+  const key = contactDupKey({ nom: p.contactName || '', email: p.email || '', telephone: p.phone || '' });
+  if (!key) return true;
+  ensureContactsArray(company);
+  return company.contacts.some(c => contactDupKey(c) === key);
 }
 
 function piaAddToCrm(id) {
@@ -5617,29 +5647,47 @@ function piaAddToCrm(id) {
 
   const me = localStorage.getItem('ast_commercial') || '';
   const address = [p.city, p.country].filter(Boolean).join(', ');
-  const prospect = {
-    id: Date.now() + (_piaCardSeq++),
-    company: p.name, sector, size,
-    address,
-    website: p.website || '',
-    contactName:  p.contactName  || '',
-    contactTitle: p.contactTitle || '',
-    email: p.email || '', phone: p.phone || '',
-    linkedin: '',
-    notes: [p.why, '🤖 Recherche IA'].filter(Boolean).join(' · '),
-    status: 'cold',
-    commercial: me,
-    createdAt: Date.now(),
-    lat: null, lng: null,
-    source: { engine: p.sourceEngine, url: p.sourceUrl || null }   // traçabilité RGPD
-  };
-  crmProspects.unshift(prospect);
+  const contactData = { nom: p.contactName || '', fonction: p.contactTitle || '', email: p.email || '', telephone: p.phone || '', linkedin: '', notes: '' };
+  const hasContact = !!(contactData.nom || contactData.email || contactData.telephone);
+
+  // Modèle entreprise : si la fiche existe déjà (même commercial), on l'ENRICHIT.
+  const existing = findCompanyFor(p.name, me);
+  let rec, enrichedExisting = false;
+  if (existing) {
+    rec = existing; enrichedExisting = true;
+    ensureContactsArray(existing);
+    if (hasContact) addContactToCompany(existing, contactData);
+    if (!existing.sector && sector) existing.sector = sector;
+    if (!existing.size && size) existing.size = size;
+    if (!existing.address && address) existing.address = address;
+    if (!existing.website && p.website) existing.website = p.website;
+    if (p.why && !(existing.notes || '').includes(p.why)) existing.notes = [existing.notes, p.why + ' · 🤖 Recherche IA'].filter(Boolean).join(' · ');
+    syncLegacyContactFields(existing);
+  } else {
+    rec = {
+      id: Date.now() + (_piaCardSeq++),
+      company: p.name, sector, size, address,
+      website: p.website || '',
+      contacts: [],
+      notes: [p.why, '🤖 Recherche IA'].filter(Boolean).join(' · '),
+      status: 'cold',
+      commercial: me,
+      createdAt: Date.now(),
+      lat: null, lng: null,
+      source: { engine: p.sourceEngine, url: p.sourceUrl || null }   // traçabilité RGPD
+    };
+    if (hasContact) addContactToCompany(rec, contactData);
+    syncLegacyContactFields(rec);
+    crmProspects.unshift(rec);
+  }
   saveCrm();
   if (typeof renderCrmList === 'function') renderCrmList();
-  if (address) addCrmToMap(prospect);   // pipeline existant → géocodage + pin carte
+  if (rec.address) addCrmToMap(rec);   // pipeline existant → géocodage + pin carte
   card.added = true;
-  if (btn) { btn.textContent = '✓ Ajouté au CRM'; btn.classList.add('added'); btn.disabled = true; }
-  if (note) note.textContent = address ? 'Fiche créée — pin carte en cours de géocodage.' : 'Fiche créée (sans adresse : pas de pin).';
+  if (btn) { btn.textContent = enrichedExisting ? '✓ Fiche enrichie' : '✓ Ajouté au CRM'; btn.classList.add('added'); btn.disabled = true; }
+  if (note) note.textContent = enrichedExisting
+    ? 'Contact ajouté à la fiche existante — aucun doublon créé.'
+    : (rec.address ? 'Fiche créée — pin carte en cours de géocodage.' : 'Fiche créée (sans adresse : pas de pin).');
   return { added: true };
 }
 
@@ -5792,30 +5840,73 @@ function _renderImportMapping() {
 }
 function _onImportMap(key, val) { _importMap[key] = val; _renderImportPreview(); }
 
-function _renderImportPreview() {
+// ── Plan d'import : regroupe les lignes PAR ENTREPRISE avant toute écriture.
+// Partagé entre l'aperçu de la modale et doImport (mêmes chiffres garantis).
+function _computeImportPlan() {
   const me = localStorage.getItem('ast_commercial') || '';
-  const existing = new Set(crmProspects.filter(p => p.commercial === me).map(p => _importDupKey({ company: p.company, contactName: p.contactName, email: p.email })));
-  const batch = new Set();
-  let valid = 0, dups = 0, empty = 0;
-  const info = _importRows.map(row => {
+  const groups = new Map();
+  let empty = 0, anon = 0;
+  _importRows.forEach(row => {
     const base = _rowToProspect(row);
-    if (!base) { empty++; return { base: null, dup: false }; }
-    const key = _importDupKey(base);
-    const dup = existing.has(key) || batch.has(key);
-    if (dup) dups++; else { valid++; batch.add(key); }
-    return { base, dup };
+    if (!base) { empty++; return; }
+    const nk = normalizeCompanyName(base.company) || ('__sans_nom_' + (++anon));
+    if (!groups.has(nk)) groups.set(nk, { company: base.company || '', sector: '', size: '', address: '', notes: [], status: base.status || 'cold', contacts: [] });
+    const g = groups.get(nk);
+    if (!g.company && base.company) g.company = base.company;
+    ['sector', 'size', 'address'].forEach(f => { if (!g[f] && base[f]) g[f] = base[f]; });
+    if (base.notes) g.notes.push(base.notes);
+    if (base.contactName || base.email || base.phone || base.linkedin) {
+      g.contacts.push({ nom: base.contactName || '', fonction: base.contactTitle || '', email: base.email || '', telephone: base.phone || '', linkedin: base.linkedin || '', notes: '' });
+    }
   });
+  let newCompanies = 0, enriched = 0, contactsToAdd = 0, dupContacts = 0;
+  const plan = [];
+  groups.forEach(g => {
+    const existing = findCompanyFor(g.company, me);
+    const seen = new Set();
+    if (existing) { ensureContactsArray(existing); existing.contacts.forEach(c => { const k = contactDupKey(c); if (k) seen.add(k); }); }
+    const fresh = [];
+    g.contacts.forEach(c => {
+      const k = contactDupKey(c);
+      if (!k) return;
+      if (seen.has(k)) { dupContacts++; return; }
+      seen.add(k); fresh.push(c);
+    });
+    if (existing) {
+      if (fresh.length) { enriched++; contactsToAdd += fresh.length; plan.push({ type: 'enrich', target: existing, g, fresh }); }
+    } else {
+      newCompanies++; contactsToAdd += fresh.length;
+      plan.push({ type: 'new', g, fresh });
+    }
+  });
+  return { plan, newCompanies, enriched, contactsToAdd, dupContacts, empty };
+}
+
+function _renderImportPreview() {
+  const { plan, newCompanies, enriched, contactsToAdd, dupContacts, empty } = _computeImportPlan();
   const stats = document.getElementById('imp-stats');
-  if (stats) stats.innerHTML = `<div><b style="color:#16a34a">${valid}</b>à importer</div><div><b style="color:#d97706">${dups}</b>doublon(s) ignoré(s)</div><div><b style="color:#94a3b8">${empty}</b>ligne(s) vide(s)</div>`;
-  const t = document.getElementById('imp-do-text'); if (t) t.textContent = `Importer ${valid} prospect${valid > 1 ? 's' : ''}`;
-  const b = document.getElementById('imp-do-btn'); if (b) b.disabled = valid === 0;
-  const cols = ['company', 'contactName', 'contactTitle', 'email', 'phone', 'status'];
-  const lbl = k => (IMPORT_FIELDS.find(f => f.key === k) || {}).label || k;
-  const shown = info.filter(r => r.base).slice(0, 6);
+  if (stats) stats.innerHTML =
+    `<div><b style="color:#16a34a">${newCompanies}</b>nouvelle${newCompanies > 1 ? 's' : ''} entreprise${newCompanies > 1 ? 's' : ''}</div>`
+    + `<div><b style="color:#16a34a">${contactsToAdd}</b>contact${contactsToAdd > 1 ? 's' : ''}</div>`
+    + `<div><b style="color:#2563eb">${enriched}</b>fiche${enriched > 1 ? 's' : ''} enrichie${enriched > 1 ? 's' : ''}</div>`
+    + `<div><b style="color:#d97706">${dupContacts}</b>contact${dupContacts > 1 ? 's' : ''} en doublon</div>`
+    + `<div><b style="color:#94a3b8">${empty}</b>ligne${empty > 1 ? 's' : ''} vide${empty > 1 ? 's' : ''}</div>`;
+  const t = document.getElementById('imp-do-text');
+  if (t) t.textContent = `Importer ${newCompanies + enriched} entreprise${newCompanies + enriched > 1 ? 's' : ''} (${contactsToAdd} contact${contactsToAdd > 1 ? 's' : ''})`;
+  const b = document.getElementById('imp-do-btn'); if (b) b.disabled = (newCompanies + contactsToAdd) === 0;
   const prev = document.getElementById('imp-preview');
-  if (prev) prev.innerHTML = shown.length
-    ? `<table><thead><tr>${cols.map(c => `<th>${lbl(c)}</th>`).join('')}</tr></thead><tbody>${shown.map(r => `<tr class="${r.dup ? 'dup' : ''}">${cols.map(c => `<td>${_esc0(r.base[c] || '')}</td>`).join('')}</tr>`).join('')}</tbody></table>`
-    : '<div style="padding:16px;font-size:12px;color:var(--text3)">Aucune ligne exploitable — associe au moins la colonne « Entreprise » ou « Contact ».</div>';
+  if (prev) {
+    const rows = [];
+    plan.forEach(item => {
+      const cName = item.type === 'new' ? item.g.company : item.target.company;
+      const tag = item.type === 'new' ? '<span style="color:#16a34a;font-weight:700">nouvelle</span>' : '<span style="color:#2563eb;font-weight:700">enrichie</span>';
+      if (!item.fresh.length) rows.push(`<tr><td>${_esc0(cName)}</td><td colspan="3" style="color:var(--text3)">(aucun contact)</td><td>${tag}</td></tr>`);
+      item.fresh.forEach(c => rows.push(`<tr><td>${_esc0(cName)}</td><td>${_esc0(c.nom)}</td><td>${_esc0(c.fonction)}</td><td>${_esc0(c.email)}</td><td>${tag}</td></tr>`));
+    });
+    prev.innerHTML = rows.length
+      ? `<table><thead><tr><th>Entreprise</th><th>Contact</th><th>Fonction</th><th>Email</th><th>Fiche</th></tr></thead><tbody>${rows.slice(0, 8).join('')}</tbody></table>`
+      : '<div style="padding:16px;font-size:12px;color:var(--text3)">Aucune ligne exploitable — associe au moins la colonne « Entreprise » ou « Contact ».</div>';
+  }
 }
 
 let _importRunning = false;
@@ -5851,86 +5942,94 @@ function doImport() {
 
   const me = localStorage.getItem('ast_commercial') || '';
   try {
-    // 1) Construction + dédup (contre l'état courant, mémoire = vérité)
-    const existing = new Set(crmProspects.filter(p => p.commercial === me).map(p => _importDupKey({ company: p.company, contactName: p.contactName, email: p.email })));
-    const batchKeys = new Set();
-    let dups = 0, empty = 0;
+    // 1) Plan : lignes regroupées par entreprise, dédup contacts vs fichier ET vs CRM
+    const { plan, newCompanies, enriched, contactsToAdd, dupContacts, empty } = _computeImportPlan();
+    if (!newCompanies && !contactsToAdd) {
+      closeImportModal();
+      _importResultToast(`Rien à importer : ${dupContacts} contact${dupContacts > 1 ? 's' : ''} déjà présent${dupContacts > 1 ? 's' : ''}` + (empty ? ` · ${empty} ligne${empty > 1 ? 's' : ''} vide${empty > 1 ? 's' : ''}` : '') + '.');
+      return;
+    }
+
+    // 2a) PRÉ-VÉRIFICATION quota : sonde AVANT toute écriture.
+    const needChars = JSON.stringify(plan).length + 4096;
+    const needKo = needChars * 2 / 1024;
+    if (!_storageProbe(needChars)) {
+      const cleanPlan = _storageCleanupPlan();
+      if (cleanPlan.freedKo > 4 && confirm(
+        `Espace de stockage insuffisant pour cet import (≈ ${needKo.toFixed(0)} Ko nécessaires).\n\n`
+        + `Le nettoyage peut libérer ≈ ${cleanPlan.freedKo.toFixed(0)} Ko :\n`
+        + cleanPlan.actions.map(a => `• ${a.label}`).join('\n')
+        + `\n\nNettoyer maintenant puis continuer l'import ?`)) {
+        _applyCleanupPlan(cleanPlan);
+      }
+      if (!_storageProbe(needChars)) {
+        throw new Error(`espace de stockage insuffisant (il faut ≈ ${needKo.toFixed(0)} Ko de plus). Ouvre l'avatar (en haut à droite) → « 🗄️ Stockage local de l'appareil » pour voir ce qui occupe la place. Rien n'a été importé.`);
+      }
+    }
+
+    // 2b) COMMIT — mémoire + localStorage ; rollback complet si l'écriture échoue.
     const now = Date.now();
     const importId = 'imp_' + now;
-    const prospects = [];
-    _importRows.forEach(row => {
-      const base = _rowToProspect(row);
-      if (!base) { empty++; return; }
-      const key = _importDupKey(base);
-      if (existing.has(key) || batchKeys.has(key)) { dups++; return; }
-      batchKeys.add(key);
-      prospects.push({
-        id: now + prospects.length, company: base.company, size: base.size, sector: base.sector, address: base.address,
-        contactName: base.contactName, contactTitle: base.contactTitle, phone: base.phone, email: base.email,
-        linkedin: validateLinkedInUrl(base.linkedin, 'person') || '',   // jamais un lien fabriqué
-        notes: [base.notes, '📥 Importé le ' + new Date().toLocaleDateString('fr-FR')].filter(Boolean).join(' · '),
-        status: base.status, commercial: me, createdAt: now + prospects.length, lat: null, lng: null,
-        importId
-      });
+    const createdRecords = [], touchedRecords = [];
+    plan.forEach((item, idx) => {
+      if (item.type === 'new') {
+        const g = item.g;
+        const rec = {
+          id: now + idx, company: g.company, size: g.size, sector: g.sector, address: g.address,
+          contacts: [],
+          notes: [g.notes.join(' · '), '📥 Importé le ' + new Date().toLocaleDateString('fr-FR')].filter(Boolean).join(' · '),
+          status: g.status || 'cold', commercial: me, createdAt: now + idx, lat: null, lng: null, importId
+        };
+        item.fresh.forEach(c => addContactToCompany(rec, c, importId));
+        syncLegacyContactFields(rec);
+        crmProspects.unshift(rec);
+        createdRecords.push(rec);
+      } else {
+        const t = item.target;
+        item.fresh.forEach(c => addContactToCompany(t, c, importId));
+        ['sector', 'size', 'address'].forEach(f => { if (!t[f] && item.g[f]) t[f] = item.g[f]; });
+        syncLegacyContactFields(t);
+        touchedRecords.push(t);
+      }
     });
-
-    // 2a) PRÉ-VÉRIFICATION quota : sonde AVANT toute écriture. Si ça ne tient pas,
-    //     on le dit tout de suite (manque estimé) et on propose le nettoyage —
-    //     au lieu d'échouer en pleine écriture. Rien n'est committé ici.
-    if (prospects.length) {
-      const needChars = JSON.stringify(prospects).length + 2048;   // + marge (registre de lots, divers)
-      const needKo = needChars * 2 / 1024;
-      if (!_storageProbe(needChars)) {
-        const plan = _storageCleanupPlan();
-        if (plan.freedKo > 4 && confirm(
-          `Espace de stockage insuffisant pour cet import (≈ ${needKo.toFixed(0)} Ko nécessaires).\n\n`
-          + `Le nettoyage peut libérer ≈ ${plan.freedKo.toFixed(0)} Ko :\n`
-          + plan.actions.map(a => `• ${a.label}`).join('\n')
-          + `\n\nNettoyer maintenant puis continuer l'import ?`)) {
-          _applyCleanupPlan(plan);
+    try { saveCrm(); }
+    catch (e) {
+      const ids = new Set(createdRecords.map(p => p.id));
+      crmProspects = crmProspects.filter(p => !ids.has(p.id));
+      crmProspects.forEach(p => {
+        if (!Array.isArray(p.contacts)) return;
+        const len = p.contacts.length;
+        p.contacts = p.contacts.filter(c => c.importId !== importId);
+        if (p.contacts.length !== len) {
+          if (p.contacts.length && !p.contacts.some(c => c.principal)) p.contacts[0].principal = true;
+          syncLegacyContactFields(p);
         }
-        if (!_storageProbe(needChars)) {
-          throw new Error(`espace de stockage insuffisant (il faut ≈ ${needKo.toFixed(0)} Ko de plus). Ouvre l'avatar (en haut à droite) → « 🗄️ Stockage local de l'appareil » pour voir ce qui occupe la place. Rien n'a été importé.`);
-        }
-      }
+      });
+      throw new Error(_importStorageErr(e));
     }
 
-    // 2) COMMIT — mémoire + localStorage ; rollback mémoire si l'écriture échoue,
-    //    pour qu'un nouvel essai ne voie pas de faux doublons.
-    prospects.forEach(p => crmProspects.unshift(p));
-    if (prospects.length) {
-      try { saveCrm(); }
-      catch (e) {
-        const ids = new Set(prospects.map(p => p.id));
-        crmProspects = crmProspects.filter(p => !ids.has(p.id));
-        throw new Error(_importStorageErr(e));
-      }
-    }
-
-    // 3) Registre des lots — non fatal, mais signalé (l'auto-réparation le
-    //    reconstruira de toute façon depuis les importId des fiches).
+    // 3) Registre des lots — count = contacts ajoutés, companies = fiches concernées.
     let batchWarn = '';
-    if (prospects.length) {
-      try {
-        const batches = getImportBatches();
-        batches.unshift({ id: importId, filename: _importFileName || 'import', date: new Date().toISOString(), count: prospects.length, importedBy: me });
-        saveImportBatches(batches);
-      } catch (e) { console.warn('[NEXUM import] Lot non enregistré (sera auto-réparé) :', e); batchWarn = ' · ⚠ lot enregistré en différé'; }
-    }
+    try {
+      const batches = getImportBatches();
+      batches.unshift({ id: importId, filename: _importFileName || 'import', date: new Date().toISOString(), count: contactsToAdd, companies: newCompanies + enriched, importedBy: me });
+      saveImportBatches(batches);
+    } catch (e) { console.warn('[NEXUM import] Lot non enregistré (sera auto-réparé) :', e); batchWarn = ' · ⚠ lot enregistré en différé'; }
 
-    // 4) UI : fermer la modale, rafraîchir, résumé clair — chaque étape best-effort.
+    // 4) UI : fermer, rafraîchir, résumé nouveau modèle.
     closeImportModal();
     try { if (typeof renderCrmList === 'function') renderCrmList(); }
     catch (e) { console.warn('[NEXUM import] Rafraîchissement de la liste :', e); }
     _importResultToast(
-      `✅ Import terminé : ${prospects.length} ajouté${prospects.length > 1 ? 's' : ''}`
-      + (dups ? ` · ${dups} doublon${dups > 1 ? 's' : ''} ignoré${dups > 1 ? 's' : ''}` : '')
+      `✅ Import : ${newCompanies + enriched} entreprise${newCompanies + enriched > 1 ? 's' : ''} (${contactsToAdd} contact${contactsToAdd > 1 ? 's' : ''})`
+      + (enriched ? ` — ${enriched} fiche${enriched > 1 ? 's' : ''} enrichie${enriched > 1 ? 's' : ''}` : '')
+      + (dupContacts ? ` · ${dupContacts} contact${dupContacts > 1 ? 's' : ''} en doublon ignoré${dupContacts > 1 ? 's' : ''}` : '')
       + (empty ? ` · ${empty} ligne${empty > 1 ? 's' : ''} vide${empty > 1 ? 's' : ''}` : '')
       + batchWarn
     );
 
-    // 5) Géocodage APRÈS le commit, asynchrone, jamais bloquant ni fatal.
-    geocodeImportedProspects(prospects);
+    // 5) Géocodage APRÈS commit (créées + enrichies sans pin), asynchrone.
+    geocodeImportedProspects(createdRecords.concat(touchedRecords));
   } catch (e) {
     console.error('[NEXUM import] Échec :', e);
     const msg = 'Import impossible — ' + ((e && e.message) || e);
@@ -6077,6 +6176,14 @@ function renderImportBatches() {
   if (!isDirector()) batches = batches.filter(b => b.importedBy === me);   // isolation : chacun ses lots
   const badge = document.getElementById('crm-imports-count');
   if (badge) badge.textContent = batches.length ? '(' + batches.length + ')' : '';
+  // Bouton fusion : visible seulement quand des doublons (même commercial) existent
+  const mergeBtn = document.getElementById('crm-merge-btn');
+  if (mergeBtn) {
+    const dupGroups = findCrmDuplicateGroups().length;
+    mergeBtn.style.display = dupGroups ? '' : 'none';
+    const mc = document.getElementById('crm-merge-count');
+    if (mc) mc.textContent = dupGroups ? '(' + dupGroups + ')' : '';
+  }
   if (!_importsCardOpen) { card.style.display = 'none'; return; }
   if (!batches.length) {
     card.style.display = 'block';
@@ -6085,12 +6192,14 @@ function renderImportBatches() {
   }
   card.style.display = 'block';
   list.innerHTML = batches.map(b => {
-    const remaining = crmProspects.filter(p => p.importId === b.id).length;
+    // Contacts restants du lot (les contacts portent l'importId depuis le modèle entreprise)
+    const remaining = crmProspects.reduce((s, p) => s + (Array.isArray(p.contacts) ? p.contacts.filter(c => c.importId === b.id).length : (p.importId === b.id ? 1 : 0)), 0);
+    const companiesTxt = b.companies ? `${b.companies} entr. · ` : '';
     const d = new Date(b.date);
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 2px;border-bottom:1px solid var(--border)">
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${_esc0(b.filename)}">📄 ${_esc0(b.filename)}</div>
-        <div style="font-size:11px;color:var(--text3)">${d.toLocaleDateString('fr-FR')} ${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})} · ${remaining}/${b.count} prospect${b.count > 1 ? 's' : ''} · ${_esc0(b.importedBy || '?')}</div>
+        <div style="font-size:11px;color:var(--text3)">${d.toLocaleDateString('fr-FR')} ${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})} · ${companiesTxt}${remaining}/${b.count} contact${b.count > 1 ? 's' : ''} · ${_esc0(b.importedBy || '?')}</div>
       </div>
       <button onclick="deleteImportBatch('${b.id}')" title="Supprimer ce lot (prospects + pins carte)"
         style="border:1px solid rgba(239,68,68,0.35);background:transparent;color:#ef4444;border-radius:7px;padding:5px 9px;font-size:12px;cursor:pointer">🗑</button>
@@ -6136,23 +6245,72 @@ function _confirmAndDeleteProspects(victims, label, afterFn) {
   alert(`✅ ${victims.length} prospect${victims.length > 1 ? 's' : ''} supprimé${victims.length > 1 ? 's' : ''}.`);
 }
 
+// Suppression de lot AU NIVEAU CONTACT : retire les contacts ajoutés par le lot ;
+// une entreprise n'est supprimée que si elle a été CRÉÉE par ce lot ET n'a plus
+// aucun contact d'une autre source.
 function deleteImportBatch(id) {
   const batches = getImportBatches();
   const b = batches.find(x => x.id === id);
   if (!b) return;
   const me = localStorage.getItem('ast_commercial') || '';
   if (!isDirector() && b.importedBy !== me) { alert('Seule la direction peut supprimer le lot d\'un autre commercial.'); return; }
-  const victims = crmProspects.filter(p => p.importId === id);
-  if (!victims.length) {
-    if (confirm(`Le lot « ${b.filename} » ne contient plus aucun prospect. Le retirer de la liste ?`)) {
+
+  const affected = [];
+  crmProspects.forEach(p => {
+    ensureContactsArray(p);
+    const batchContacts = p.contacts.filter(c => c.importId === id).length;
+    if (batchContacts || p.importId === id) affected.push({ p, batchContacts });
+  });
+  if (!affected.length) {
+    if (confirm(`Le lot « ${b.filename} » ne contient plus aucune donnée. Le retirer de la liste ?`)) {
       saveImportBatches(getImportBatches().filter(x => x.id !== id));
       renderImportBatches();
     }
     return;
   }
-  _confirmAndDeleteProspects(victims, `lot « ${b.filename} »`, () => {
-    saveImportBatches(getImportBatches().filter(x => x.id !== id));
+  const contactsToRemove = affected.reduce((s, a) => s + a.batchContacts, 0);
+  const companiesToDelete = affected.filter(a => a.p.importId === id && a.p.contacts.length === a.batchContacts).map(a => a.p);
+  const companiesKept = affected.length - companiesToDelete.length;
+
+  const { seqs, deals } = _deletionImpacts(companiesToDelete);
+  let msg = `Supprimer le lot « ${b.filename} » ?\n\n`
+    + `• ${contactsToRemove} contact${contactsToRemove > 1 ? 's' : ''} retiré${contactsToRemove > 1 ? 's' : ''}\n`
+    + `• ${companiesToDelete.length} entreprise${companiesToDelete.length > 1 ? 's' : ''} supprimée${companiesToDelete.length > 1 ? 's' : ''} (créée${companiesToDelete.length > 1 ? 's' : ''} par ce lot, aucun contact d'autre source)\n`
+    + (companiesKept ? `• ${companiesKept} entreprise${companiesKept > 1 ? 's' : ''} conservée${companiesKept > 1 ? 's' : ''} (données d'autres sources)\n` : '')
+    + `\nLes pins carte des entreprises supprimées le seront aussi, et la suppression est synchronisée pour toute l'équipe.`;
+  if (seqs.length || deals.length) {
+    msg += '\n\n⚠️ RÉFÉRENCES ACTIVES DÉTECTÉES :';
+    if (seqs.length)  msg += `\n• ${seqs.length} séquence${seqs.length > 1 ? 's' : ''} en cours : ` + seqs.slice(0, 5).map(s => s.company).join(', ') + (seqs.length > 5 ? ` (+${seqs.length - 5})` : '');
+    if (deals.length) msg += `\n• ${deals.length} deal${deals.length > 1 ? 's' : ''} ouvert${deals.length > 1 ? 's' : ''} : ` + deals.slice(0, 5).map(d => d.company || d.name).join(', ') + (deals.length > 5 ? ` (+${deals.length - 5})` : '');
+    msg += '\nCes séquences/deals ne seront PAS supprimés mais perdront leur fiche CRM.';
+  }
+  if (!confirm(msg)) return;
+  const typed = prompt(`Confirmation finale — tape SUPPRIMER (en majuscules) pour supprimer le lot « ${b.filename} » :`);
+  if (typed === null) return;
+  if (typed.trim() !== 'SUPPRIMER') { alert('Suppression annulée (texte de confirmation incorrect).'); return; }
+
+  const delIds = new Set(companiesToDelete.map(p => p.id));
+  crmProspects = crmProspects.filter(p => !delIds.has(p.id));
+  crmProspects.forEach(p => {
+    if (!Array.isArray(p.contacts)) return;
+    const len = p.contacts.length;
+    p.contacts = p.contacts.filter(c => c.importId !== id);
+    if (p.contacts.length !== len) {
+      if (p.contacts.length && !p.contacts.some(c => c.principal)) p.contacts[0].principal = true;
+      syncLegacyContactFields(p);
+    }
   });
+  saveCrm();
+  mapCompanies = mapCompanies.filter(c => {
+    if (!delIds.has(c.id)) return true;
+    if (mapMarkers[c.id]) { mapMarkers[c.id].remove(); delete mapMarkers[c.id]; }
+    return false;
+  });
+  saveMapCompanies();
+  saveImportBatches(getImportBatches().filter(x => x.id !== id));
+  if (typeof renderCrmList === 'function') renderCrmList();
+  if (mapObj) renderMapSidebar();
+  alert(`✅ Lot supprimé : ${contactsToRemove} contact${contactsToRemove > 1 ? 's' : ''} retiré${contactsToRemove > 1 ? 's' : ''}, ${companiesToDelete.length} entreprise${companiesToDelete.length > 1 ? 's' : ''} supprimée${companiesToDelete.length > 1 ? 's' : ''}.`);
 }
 
 function deleteAllCrmProspects() {
@@ -6752,6 +6910,291 @@ function renderTerritoryResults(data) {
 
 // ── CRM MODULE ────────────────────────────────────────────────────────
 let crmProspects = JSON.parse(localStorage.getItem('ast_crm') || '[]');
+
+// ══════════════ MODÈLE ENTREPRISE (1 fiche = 1 entreprise, N contacts) ══════════════
+// Rétro-compatibilité OBLIGATOIRE : les champs plats legacy (contactName, contactTitle,
+// email, phone, linkedin) restent synchronisés avec le contact PRINCIPAL à chaque
+// écriture, et toutes les lectures restent défensives (une fiche peut ne pas avoir
+// encore de tableau contacts).
+
+function normalizeCompanyName(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/\b(sasu|sas|sarl|sa|ste|societe|soc|eurl|sci|snc|scop|sccv|gie|cie|co|inc|gmbh|ltd|ag|bv|nv|srl|spa)\b\.?/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+let _contactSeq = 0;
+function _newContactId(companyId) { return String(companyId || Date.now()) + '_c' + (Date.now() % 1e7) + '_' + (++_contactSeq); }
+
+// Upgrade paresseux et idempotent d'une fiche legacy → tableau contacts.
+// L'importId de la fiche est reporté sur le contact (suppression de lot par contact).
+function ensureContactsArray(p) {
+  if (!p || Array.isArray(p.contacts)) return p;
+  p.contacts = [];
+  if ((p.contactName || '').trim() || (p.email || '').trim() || (p.phone || '').trim() || (p.linkedin || '').trim()) {
+    const c = {
+      id: _newContactId(p.id), nom: p.contactName || '', fonction: p.contactTitle || '',
+      email: p.email || '', telephone: p.phone || '', linkedin: p.linkedin || '',
+      notes: '', principal: true
+    };
+    if (p.importId) c.importId = p.importId;
+    p.contacts.push(c);
+  }
+  return p;
+}
+
+// Contact principal (nouveau modèle → repli legacy). Peut renvoyer null (fiche sans contact).
+function getPrimaryContact(p) {
+  if (!p) return null;
+  if (Array.isArray(p.contacts) && p.contacts.length) return p.contacts.find(c => c && c.principal) || p.contacts[0];
+  if ((p.contactName || '') || (p.email || '') || (p.phone || '')) {
+    return { nom: p.contactName || '', fonction: p.contactTitle || '', email: p.email || '', telephone: p.phone || '', linkedin: p.linkedin || '', principal: true };
+  }
+  return null;
+}
+
+// À appeler après TOUTE écriture sur p.contacts : recopie le principal dans les champs plats.
+function syncLegacyContactFields(p) {
+  if (!p || !Array.isArray(p.contacts)) return p;
+  const c = p.contacts.length ? (p.contacts.find(x => x && x.principal) || p.contacts[0]) : null;
+  p.contactName  = c ? (c.nom || '') : '';
+  p.contactTitle = c ? (c.fonction || '') : '';
+  p.email        = c ? (c.email || '') : '';
+  p.phone        = c ? (c.telephone || '') : '';
+  p.linkedin     = c ? (c.linkedin || '') : '';
+  return p;
+}
+
+// Clé de dédup d'un CONTACT : email d'abord, sinon nom+téléphone.
+function contactDupKey(c) {
+  const em = String((c && c.email) || '').trim().toLowerCase();
+  if (em) return 'e:' + em;
+  const nom = _impNorm((c && c.nom) || '');
+  const tel = String((c && c.telephone) || '').replace(/\D/g, '');
+  return (nom || tel) ? 'n:' + nom + '|' + tel : '';
+}
+
+// Ajoute un contact à une fiche avec dédup ; renvoie 'added' | 'dup' | 'empty'.
+function addContactToCompany(p, contact, importId) {
+  ensureContactsArray(p);
+  const key = contactDupKey(contact);
+  if (!key) return 'empty';
+  if (p.contacts.some(c => contactDupKey(c) === key)) return 'dup';
+  const c = {
+    id: _newContactId(p.id), nom: contact.nom || '', fonction: contact.fonction || '',
+    email: contact.email || '', telephone: contact.telephone || '',
+    linkedin: validateLinkedInUrl(contact.linkedin, 'person') || '',
+    notes: contact.notes || '', principal: p.contacts.length === 0
+  };
+  if (importId) c.importId = importId;
+  p.contacts.push(c);
+  syncLegacyContactFields(p);
+  return 'added';
+}
+
+// Recherche d'une fiche existante du même commercial (nom normalisé).
+function findCompanyFor(name, commercial) {
+  const key = normalizeCompanyName(name);
+  if (!key) return null;
+  return crmProspects.find(p => (p.commercial || '') === (commercial || '') && normalizeCompanyName(p.company) === key) || null;
+}
+
+// Upgrade de forme au chargement (silencieux, sans fusion — la fusion est à la demande).
+(function () {
+  let changed = false;
+  crmProspects.forEach(p => { if (!Array.isArray(p.contacts)) { ensureContactsArray(p); changed = true; } });
+  if (changed) { try { localStorage.setItem('ast_crm', JSON.stringify(crmProspects)); } catch (e) {} }
+})();
+
+// ── FUSION DES DOUBLONS (même commercial uniquement, aperçu avant application) ──
+function findCrmDuplicateGroups(list) {
+  const groups = {};
+  (list || crmProspects).forEach(p => {
+    const nk = normalizeCompanyName(p.company);
+    if (!nk) return;
+    const key = nk + '|' + (p.commercial || '');
+    (groups[key] = groups[key] || []).push(p);
+  });
+  return Object.values(groups).filter(g => g.length > 1);
+}
+function countCrossOwnerDuplicates() {
+  const byName = {};
+  crmProspects.forEach(p => { const nk = normalizeCompanyName(p.company); if (nk) (byName[nk] = byName[nk] || new Set()).add(p.commercial || ''); });
+  return Object.values(byName).filter(s => s.size > 1).length;
+}
+
+// Fusionne un groupe SUR PLACE (fiche la plus riche = base). Renvoie stats + ids retirés.
+function _mergeCompanyGroup(group) {
+  const score = p => (p.address ? 4 : 0) + (p.sector ? 2 : 0) + (p.size ? 1 : 0);
+  const base = group.slice().sort((a, b) => score(b) - score(a) || (a.createdAt || 0) - (b.createdAt || 0))[0];
+  ensureContactsArray(base);
+  let dupContacts = 0;
+  const notes = new Set(String(base.notes || '').split(' · ').filter(Boolean));
+  group.forEach(p => {
+    if (p === base) return;
+    ensureContactsArray(p);
+    p.contacts.forEach(c => {
+      if (!c || !(c.nom || c.email || c.telephone)) return;
+      const key = contactDupKey(c);
+      if (key && base.contacts.some(x => contactDupKey(x) === key)) { dupContacts++; return; }
+      base.contacts.push(Object.assign({}, c, { principal: false }));
+    });
+    ['address', 'sector', 'size', 'website'].forEach(f => { if (!base[f] && p[f]) base[f] = p[f]; });
+    String(p.notes || '').split(' · ').filter(Boolean).forEach(n => notes.add(n));
+    if (base.lat == null && p.lat != null) { base.lat = p.lat; base.lng = p.lng; }
+  });
+  base.notes = Array.from(notes).join(' · ');
+  if (base.contacts.length && !base.contacts.some(c => c.principal)) base.contacts[0].principal = true;
+  syncLegacyContactFields(base);
+  return { baseId: base.id, removedIds: group.filter(p => p !== base).map(p => p.id), dupContacts };
+}
+
+function crmMergeDuplicates() {
+  const groups = findCrmDuplicateGroups();
+  const crossOwner = countCrossOwnerDuplicates();
+  const crossNote = crossOwner ? `\n\nℹ️ ${crossOwner} nom(s) d'entreprise existent chez PLUSIEURS commerciaux — jamais fusionnés automatiquement.` : '';
+  if (!groups.length) { alert('Aucun doublon (même commercial) à fusionner.' + crossNote); return; }
+
+  // APERÇU exact, calculé sur des clones (aucune mutation avant confirmation)
+  const cloneList = JSON.parse(JSON.stringify(crmProspects));
+  const cloneGroups = findCrmDuplicateGroups(cloneList);
+  let dupContacts = 0;
+  cloneGroups.forEach(g => { dupContacts += _mergeCompanyGroup(g).dupContacts; });
+  const before = crmProspects.length;
+  const involved = groups.reduce((s, g) => s + g.length, 0);
+  const after = before - (involved - groups.length);
+  const contactsBefore = crmProspects.reduce((s, p) => s + ((ensureContactsArray(p), p.contacts.length)), 0);
+  const examples = groups.slice(0, 6).map(g => `  – ${g[0].company} (${g.length} fiches)`).join('\n');
+
+  if (!confirm(`Fusionner les doublons d'entreprises ? Aperçu :\n\n`
+    + `• ${groups.length} entreprise${groups.length > 1 ? 's' : ''} en doublon (même commercial)\n`
+    + `• ${before} → ${after} fiches\n`
+    + `• ${contactsBefore} contacts conservés${dupContacts ? ` (${dupContacts} doublon${dupContacts > 1 ? 's' : ''} de contact retiré${dupContacts > 1 ? 's' : ''} — même email ou nom+téléphone)` : ''}\n`
+    + examples + (groups.length > 6 ? `\n  … + ${groups.length - 6} autres` : '')
+    + `\n\nDonnées entreprise les plus riches conservées, notes distinctes concaténées.`
+    + `\nUne sauvegarde de secours est créée avant l'application.` + crossNote)) return;
+
+  snapshotLocalBackup('avant-fusion');
+  const removedAll = [];
+  findCrmDuplicateGroups().forEach(g => {
+    const r = _mergeCompanyGroup(g);
+    r.removedIds.forEach(id => removedAll.push({ id, baseId: r.baseId }));
+  });
+  const removedSet = new Set(removedAll.map(r => r.id));
+  crmProspects = crmProspects.filter(p => !removedSet.has(p.id));
+  // Carte : transférer les coordonnées au besoin, puis retirer les entrées des fiches fusionnées
+  removedAll.forEach(({ id, baseId }) => {
+    const idx = mapCompanies.findIndex(c => c.id === id);
+    if (idx < 0) return;
+    const entry = mapCompanies[idx];
+    const baseEntry = mapCompanies.find(c => c.id === baseId);
+    if (!baseEntry) { entry.id = baseId; return; }               // l'entrée devient celle de la base
+    if (baseEntry.lat == null && entry.lat != null) { baseEntry.lat = entry.lat; baseEntry.lng = entry.lng; }
+    mapCompanies.splice(idx, 1);
+    if (mapMarkers[id]) { mapMarkers[id].remove(); delete mapMarkers[id]; }
+  });
+  saveCrm(); saveMapCompanies();
+  if (typeof renderCrmList === 'function') renderCrmList();
+  if (mapObj) renderMapSidebar();
+  alert(`✅ Fusion terminée : ${groups.length} entreprise${groups.length > 1 ? 's' : ''} fusionnée${groups.length > 1 ? 's' : ''}, ${before} → ${crmProspects.length} fiches. Sauvegarde disponible en cas de besoin.`);
+}
+
+// ── UI : liste des contacts d'une fiche entreprise + CRUD par contact ──
+function _crmContactsHtml(p, isOwn, date) {
+  const contacts = Array.isArray(p.contacts) ? p.contacts : [];
+  const rows = contacts.map(c => {
+    const cLinkedin = validateLinkedInUrl(c.linkedin, 'person') || (c.linkedin ? (String(c.linkedin).startsWith('http') ? c.linkedin : 'https://' + c.linkedin) : '');
+    const star = c.principal
+      ? '<span title="Contact principal" style="color:#d97706">★</span>'
+      : (isOwn ? `<button class="crm-action-btn" style="padding:1px 4px;font-size:11px" title="Définir comme contact principal" onclick="crmSetPrimaryContact(${p.id}, '${c.id}')">☆</button>` : '');
+    return `<div class="crm-detail-row" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      ${star}
+      <strong>${_esc0(c.nom) || '<span style="color:var(--text3)">(sans nom)</span>'}</strong>${c.fonction ? ' · ' + _esc0(c.fonction) : ''}
+      ${c.email ? `<a href="mailto:${_esc0(c.email)}">✉ ${_esc0(c.email)}</a>` : ''}
+      ${c.telephone ? `<a href="tel:${_esc0(c.telephone)}">📞 ${_esc0(c.telephone)}</a>` : ''}
+      ${cLinkedin ? `<a href="${_esc0(cLinkedin)}" target="_blank" rel="noopener noreferrer">🔗</a>` : ''}
+      ${isOwn ? `<span style="margin-left:auto;display:inline-flex;gap:2px">
+        <button class="crm-action-btn" style="padding:1px 5px;font-size:11px" title="Modifier ce contact" onclick="crmContactForm(${p.id}, '${c.id}')">✏️</button>
+        <button class="crm-action-btn del" style="padding:1px 5px;font-size:11px" title="Supprimer ce contact" onclick="crmDeleteContact(${p.id}, '${c.id}')">🗑</button>
+      </span>` : ''}
+    </div>`;
+  }).join('');
+  return `<div class="crm-card-details">
+    ${rows || '<div class="crm-detail-row" style="color:var(--text3)">Aucun contact sur cette fiche.</div>'}
+    <div id="crm-contact-form-${p.id}"></div>
+    <div class="crm-detail-row" style="display:flex;align-items:center;gap:10px;color:var(--text3)">
+      📅 ${date}
+      ${isOwn ? `<button class="crm-action-btn" style="font-size:11px;padding:2px 8px;white-space:nowrap;width:auto" onclick="crmContactForm(${p.id}, '')">➕ Ajouter un contact</button>` : ''}
+      ${contacts.length > 1 ? `<span>👥 ${contacts.length} contacts</span>` : ''}
+    </div>
+  </div>`;
+}
+
+function crmContactForm(companyId, contactId) {
+  const p = crmProspects.find(x => x.id === companyId);
+  const box = document.getElementById('crm-contact-form-' + companyId);
+  if (!p || !box) return;
+  ensureContactsArray(p);
+  const c = contactId ? p.contacts.find(x => x.id === contactId) : null;
+  const v = f => c ? _esc0(c[f] || '') : '';
+  box.innerHTML = `<div style="border:1px dashed var(--border);border-radius:9px;padding:9px;margin:6px 0;display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <input class="crm-input" style="flex:1;min-width:130px;padding:6px 9px;font-size:12px" id="ccf-nom-${companyId}" placeholder="Nom du contact" value="${v('nom')}" />
+      <input class="crm-input" style="flex:1;min-width:130px;padding:6px 9px;font-size:12px" id="ccf-fonction-${companyId}" placeholder="Fonction" value="${v('fonction')}" />
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <input class="crm-input" style="flex:1;min-width:130px;padding:6px 9px;font-size:12px" id="ccf-email-${companyId}" placeholder="Email" value="${v('email')}" />
+      <input class="crm-input" style="flex:1;min-width:130px;padding:6px 9px;font-size:12px" id="ccf-tel-${companyId}" placeholder="Téléphone" value="${v('telephone')}" />
+      <input class="crm-input" style="flex:1;min-width:130px;padding:6px 9px;font-size:12px" id="ccf-li-${companyId}" placeholder="LinkedIn" value="${v('linkedin')}" />
+    </div>
+    <div style="display:flex;gap:6px;justify-content:flex-end">
+      <button class="crm-btn-cancel" style="padding:5px 12px;font-size:12px" onclick="renderCrmList()">Annuler</button>
+      <button class="btn-primary" style="padding:5px 14px;font-size:12px" onclick="crmSaveContact(${companyId}, '${contactId || ''}')">${c ? 'Enregistrer' : 'Ajouter'}</button>
+    </div>
+  </div>`;
+}
+
+function crmSaveContact(companyId, contactId) {
+  const p = crmProspects.find(x => x.id === companyId);
+  if (!p) return;
+  ensureContactsArray(p);
+  const g = f => (document.getElementById('ccf-' + f + '-' + companyId)?.value || '').trim();
+  const data = { nom: g('nom'), fonction: g('fonction'), email: g('email'), telephone: g('tel'), linkedin: g('li') };
+  if (!(data.nom || data.email || data.telephone)) { alert('Renseigne au moins un nom, un email ou un téléphone.'); return; }
+  if (contactId) {
+    const c = p.contacts.find(x => x.id === contactId);
+    if (!c) return;
+    Object.assign(c, { nom: data.nom, fonction: data.fonction, email: data.email, telephone: data.telephone, linkedin: validateLinkedInUrl(data.linkedin, 'person') || data.linkedin || '' });
+  } else {
+    const r = addContactToCompany(p, data);
+    if (r === 'dup') { alert('Ce contact (même email ou nom+téléphone) est déjà sur la fiche.'); return; }
+  }
+  syncLegacyContactFields(p);
+  saveCrm();
+  renderCrmList();
+}
+
+function crmDeleteContact(companyId, contactId) {
+  const p = crmProspects.find(x => x.id === companyId);
+  if (!p || !Array.isArray(p.contacts)) return;
+  const c = p.contacts.find(x => x.id === contactId);
+  if (!c) return;
+  if (!confirm(`Supprimer le contact « ${c.nom || c.email || 'sans nom'} » de ${p.company} ?\n(La fiche entreprise est conservée, même sans contact.)`)) return;
+  p.contacts = p.contacts.filter(x => x.id !== contactId);
+  if (p.contacts.length && !p.contacts.some(x => x.principal)) p.contacts[0].principal = true;
+  syncLegacyContactFields(p);
+  saveCrm();
+  renderCrmList();
+}
+
+function crmSetPrimaryContact(companyId, contactId) {
+  const p = crmProspects.find(x => x.id === companyId);
+  if (!p || !Array.isArray(p.contacts)) return;
+  p.contacts.forEach(c => { c.principal = (c.id === contactId); });
+  syncLegacyContactFields(p);
+  saveCrm();
+  renderCrmList();
+}
 let crmEditId = null;
 
 const STATUS_LABELS = {
@@ -6812,30 +7255,51 @@ function submitCrmForm() {
   }
   document.getElementById('crm-error').textContent = '';
 
-  const prospect = {
-    id: crmEditId || Date.now(),
-    company, size, sector, address,
-    contactName:  document.getElementById('crm-contact-name').value.trim(),
-    contactTitle: document.getElementById('crm-contact-title').value.trim(),
-    phone:        document.getElementById('crm-phone').value.trim(),
-    email:        document.getElementById('crm-email').value.trim(),
-    linkedin:     document.getElementById('crm-linkedin').value.trim(),
-    notes:        document.getElementById('crm-notes').value.trim(),
-    status:       getCrmStatus(),
-    commercial:   localStorage.getItem('ast_commercial') || '',
-    createdAt:    crmEditId ? (crmProspects.find(p=>p.id===crmEditId)?.createdAt || Date.now()) : Date.now()
+  const me = localStorage.getItem('ast_commercial') || '';
+  const notes = document.getElementById('crm-notes').value.trim();
+  const formContact = {
+    nom:       document.getElementById('crm-contact-name').value.trim(),
+    fonction:  document.getElementById('crm-contact-title').value.trim(),
+    telephone: document.getElementById('crm-phone').value.trim(),
+    email:     document.getElementById('crm-email').value.trim(),
+    linkedin:  document.getElementById('crm-linkedin').value.trim()
   };
+  const hasFormContact = !!(formContact.nom || formContact.email || formContact.telephone || formContact.linkedin);
+  let target;
 
   if (crmEditId) {
-    const idx = crmProspects.findIndex(p => p.id === crmEditId);
-    if (idx >= 0) crmProspects[idx] = prospect;
+    // Édition : champs entreprise + contact PRINCIPAL mis à jour depuis le formulaire
+    target = crmProspects.find(p => p.id === crmEditId);
+    if (!target) return;
+    Object.assign(target, { company, size, sector, address, notes, status: getCrmStatus() });
+    ensureContactsArray(target);
+    const prim = target.contacts.length ? (target.contacts.find(c => c.principal) || target.contacts[0]) : null;
+    if (prim) Object.assign(prim, { nom: formContact.nom, fonction: formContact.fonction, email: formContact.email, telephone: formContact.telephone, linkedin: validateLinkedInUrl(formContact.linkedin, 'person') || formContact.linkedin || '' });
+    else if (hasFormContact) addContactToCompany(target, formContact);
+    syncLegacyContactFields(target);
   } else {
-    crmProspects.unshift(prospect);
+    // Anti-doublon : l'entreprise existe déjà chez ce commercial ? → proposer l'enrichissement
+    const existing = findCompanyFor(company, me);
+    if (existing && confirm(`« ${existing.company} » existe déjà dans votre CRM.\n\nAjouter ce contact à la fiche existante au lieu de créer un doublon ?\n(Annuler = créer quand même une nouvelle fiche.)`)) {
+      target = existing;
+      const r = hasFormContact ? addContactToCompany(existing, formContact) : 'empty';
+      ['sector', 'size', 'address'].forEach(f => { const v = f === 'sector' ? sector : f === 'size' ? size : address; if (!existing[f] && v) existing[f] = v; });
+      if (notes && !(existing.notes || '').includes(notes)) existing.notes = [existing.notes, notes].filter(Boolean).join(' · ');
+      if (r === 'dup') alert('Ce contact (même email ou nom+téléphone) est déjà sur la fiche — rien n\'a été dupliqué.');
+    } else {
+      target = {
+        id: Date.now(), company, size, sector, address, contacts: [], notes,
+        status: getCrmStatus(), commercial: me, createdAt: Date.now(), lat: null, lng: null
+      };
+      if (hasFormContact) addContactToCompany(target, formContact);
+      syncLegacyContactFields(target);
+      crmProspects.unshift(target);
+    }
   }
   saveCrm();
 
   // Add to map (geocode by address)
-  addCrmToMap(prospect);
+  addCrmToMap(target);
 
   clearCrmForm();
   renderCrmList();
@@ -6944,12 +7408,17 @@ function deleteCrm(id) {
 }
 
 function exportCrmCSV() {
-  const rows = [['Entreprise','Taille','Secteur','Adresse','Statut','Contact','Fonction','Telephone','Email','Notes','Commercial','Date']];
+  // Modèle entreprise : une ligne PAR CONTACT (champs entreprise répétés) ; ★ = principal.
+  const rows = [['Entreprise','Taille','Secteur','Adresse','Statut','Contact','Fonction','Telephone','Email','LinkedIn','Principal','Notes','Commercial','Date']];
   crmProspects.forEach(p => {
+    ensureContactsArray(p);
     const st = STATUS_LABELS[p.status];
-    rows.push([p.company, p.size, p.sector, p.address, st?.label||p.status,
-      p.contactName||'', p.contactTitle||'', p.phone||'', p.email||'', p.notes||'',
-      p.commercial||'', new Date(p.createdAt).toLocaleDateString('fr-FR')]);
+    const base = [p.company, p.size, p.sector, p.address, st?.label||p.status];
+    const tail = [p.notes||'', p.commercial||'', new Date(p.createdAt).toLocaleDateString('fr-FR')];
+    if (!p.contacts.length) { rows.push(base.concat(['', '', '', '', '', ''], tail)); return; }
+    p.contacts.forEach(c => {
+      rows.push(base.concat([c.nom||'', c.fonction||'', c.telephone||'', c.email||'', c.linkedin||'', c.principal ? 'oui' : ''], tail));
+    });
   });
   const csv = rows.map(r => r.map(v => `"${(v||'').replace(/"/g,'""')}"`).join(';')).join('\n');
   const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
@@ -7052,8 +7521,7 @@ function renderCrmList() {
     const commColor = getCommercialColor(p.commercial);
     const commInit  = getCommercialInitials(p.commercial);
     const isOwn = p.commercial === me;
-    const hasContact = p.contactName || p.phone || p.email || p.linkedin;
-    const pLinkedin = validateLinkedInUrl(p.linkedin, 'person') || (p.linkedin ? (p.linkedin.startsWith('http') ? p.linkedin : 'https://' + p.linkedin) : '');
+    ensureContactsArray(p);
     const date = new Date(p.createdAt).toLocaleDateString('fr-FR');
     return `<div class="crm-card" style="${!isOwn?'opacity:0.85;border-style:dashed':''}">
       <div class="crm-card-header">
@@ -7073,13 +7541,7 @@ function renderCrmList() {
           ${isOwn ? `<button class="crm-action-btn del" onclick="deleteCrm(${p.id})" title="Supprimer">🗑️</button>` : ''}
         </div>
       </div>
-      ${hasContact ? `<div class="crm-card-details">
-        ${p.contactName ? `<div class="crm-detail-row">👤 <strong>${p.contactName}</strong>${p.contactTitle?' · '+p.contactTitle:''}</div>` : ''}
-        ${p.email ? `<div class="crm-detail-row">✉ <a href="mailto:${p.email}">${p.email}</a></div>` : ''}
-        ${p.phone ? `<div class="crm-detail-row">📞 <a href="tel:${p.phone}">${p.phone}</a></div>` : ''}
-        ${pLinkedin ? `<div class="crm-detail-row">🔗 <a href="${pLinkedin}" target="_blank" rel="noopener noreferrer">LinkedIn</a></div>` : ''}
-        <div class="crm-detail-row" style="color:var(--text3)">📅 ${date}</div>
-      </div>` : ''}
+      ${_crmContactsHtml(p, isOwn, date)}
       ${p.notes ? `<div class="crm-notes-box">💬 ${p.notes}</div>` : ''}
     </div>`;
   }).join('');
@@ -7225,10 +7687,24 @@ function buildPopupHTML(co) {
       ${cfg.emoji} ${cfg.label}
     </div>`;
   }).join('');
+  // Modèle entreprise : la popup liste les contacts de la fiche CRM correspondante
+  let contactsHtml = '';
+  const rec = crmProspects.find(p => p.id === co.id) || crmProspects.find(p => normalizeCompanyName(p.company) === normalizeCompanyName(co.name));
+  if (rec) {
+    ensureContactsArray(rec);
+    if (rec.contacts.length) {
+      contactsHtml = `<div style="margin:4px 0 8px;padding:6px 8px;background:var(--bg);border-radius:8px;max-height:96px;overflow-y:auto">`
+        + rec.contacts.slice(0, 6).map(c =>
+          `<div style="font-size:11px;line-height:1.5">${c.principal ? '★ ' : ''}<b>${_esc0(c.nom || c.email || '(sans nom)')}</b>${c.fonction ? ' · ' + _esc0(c.fonction) : ''}${c.telephone ? ` · <a href="tel:${_esc0(c.telephone)}">${_esc0(c.telephone)}</a>` : ''}</div>`).join('')
+        + (rec.contacts.length > 6 ? `<div style="font-size:10px;color:var(--text3)">+ ${rec.contacts.length - 6} autre${rec.contacts.length - 6 > 1 ? 's' : ''}</div>` : '')
+        + `</div>`;
+    }
+  }
   return `<div class="popup-card">
     <div class="popup-name">${co.name}</div>
     <div class="popup-meta">${[co.industry, co.location].filter(Boolean).join(' · ')}</div>
     ${commBadge}
+    ${contactsHtml}
     <div class="popup-status-label">Statut commercial</div>
     <div class="popup-status-grid">${opts}</div>
   </div>`;
@@ -9815,28 +10291,36 @@ function onDealCompanySelect() {
     ctSel.innerHTML = '<option value="">— Aucun —</option>'; ctSel.disabled = true;
     return;
   }
+  // Modèle entreprise : les contacts viennent du tableau contacts de la (ou des) fiche(s)
   const records = visibleProspects().filter(p => p.company === company);
   document.getElementById('dl-company').value = company;
   if (records[0] && records[0].sector) document.getElementById('dl-sector').value = records[0].sector;
-  const contacts = records.filter(p => p.contactName);
-  ctSel.disabled = contacts.length === 0;
-  ctSel.innerHTML = '<option value="">' + (contacts.length ? '— Choisir un contact —' : '— Aucun contact au CRM —') + '</option>' +
-    contacts.map(p => `<option value="${p.id}">${p.contactName}${p.contactTitle?' · '+p.contactTitle:''}</option>`).join('');
-  if (contacts.length === 1) { ctSel.value = String(contacts[0].id); fillDealFromProspect(contacts[0]); }
+  const opts = [];
+  records.forEach(p => {
+    ensureContactsArray(p);
+    p.contacts.forEach(c => { if (c && (c.nom || c.email || c.telephone)) opts.push({ p, c }); });
+  });
+  ctSel.disabled = opts.length === 0;
+  ctSel.innerHTML = '<option value="">' + (opts.length ? '— Choisir un contact —' : '— Aucun contact au CRM —') + '</option>' +
+    opts.map(o => `<option value="${o.p.id}|${o.c.id}">${o.c.principal ? '★ ' : ''}${_esc0(o.c.nom || o.c.email)}${o.c.fonction ? ' · ' + _esc0(o.c.fonction) : ''}</option>`).join('');
+  if (opts.length === 1) { ctSel.value = opts[0].p.id + '|' + opts[0].c.id; _dealFillContact(opts[0].c, opts[0].p); }
   else { ['dl-contact','dl-contact-title','dl-email','dl-phone'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; }); }
 }
 function onDealContactSelect() {
-  const pid = document.getElementById('dl-crm-contact').value;
-  if (!pid) { ['dl-contact','dl-contact-title','dl-email','dl-phone'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; }); return; }
-  const p = visibleProspects().find(x => String(x.id) === String(pid));
-  if (p) fillDealFromProspect(p);
+  const v = document.getElementById('dl-crm-contact').value;
+  if (!v) { ['dl-contact','dl-contact-title','dl-email','dl-phone'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; }); return; }
+  const parts = String(v).split('|');
+  const p = visibleProspects().find(x => String(x.id) === parts[0]);
+  const c = (p && Array.isArray(p.contacts)) ? p.contacts.find(x => x.id === parts[1]) : null;
+  if (c) _dealFillContact(c, p);
+  else if (p) _dealFillContact(getPrimaryContact(p), p);   // repli legacy
 }
-function fillDealFromProspect(p) {
-  document.getElementById('dl-contact').value       = p.contactName  || '';
-  document.getElementById('dl-contact-title').value = p.contactTitle || '';
-  document.getElementById('dl-email').value         = p.email || '';
-  document.getElementById('dl-phone').value         = p.phone || '';
-  if (p.sector) document.getElementById('dl-sector').value = p.sector;
+function _dealFillContact(c, p) {
+  document.getElementById('dl-contact').value       = c ? (c.nom || '') : '';
+  document.getElementById('dl-contact-title').value = c ? (c.fonction || '') : '';
+  document.getElementById('dl-email').value         = c ? (c.email || '') : '';
+  document.getElementById('dl-phone').value         = c ? (c.telephone || '') : '';
+  if (p && p.sector) document.getElementById('dl-sector').value = p.sector;
   // NB : valeur du deal, probabilité, date de closing, produit, prochaine action et notes
   // ne sont JAMAIS auto-remplis (saisie manuelle du commercial) — jamais inventés.
 }
@@ -10239,23 +10723,60 @@ function populateProspectSelect() {
   // Même règle de visibilité que le picker deal : helper partagé visibleProspects()
   const opts = visibleProspects();
   sel.innerHTML = '<option value="">-- Choisir depuis le CRM --</option>' +
-    opts.map(p => `<option value="${p.id}">${p.company}${p.contactName?' · '+p.contactName:''}</option>`).join('');
+    opts.map(p => {
+      ensureContactsArray(p);
+      const n = p.contacts.length;
+      return `<option value="${p.id}">${p.company}${n ? ' · ' + n + ' contact' + (n > 1 ? 's' : '') : ''}</option>`;
+    }).join('');
+  const wrap = document.getElementById('oa-contact-select-wrap');
+  if (wrap) wrap.style.display = 'none';
 }
 
+// Étape 1 : entreprise → remplit les champs entreprise + liste des contacts
 function onProspectSelect(id) {
   if (!id) return;
   const p = crmProspects.find(x => x.id == id);
   if (!p) return;
-  document.getElementById('oa-company').value       = p.company || '';
-  document.getElementById('oa-sector').value        = p.sector  || '';
-  document.getElementById('oa-contact-name').value  = p.contactName  || '';
-  document.getElementById('oa-contact-title').value = p.contactTitle || '';
-  document.getElementById('oa-contact-email').value = p.email   || '';
-  document.getElementById('oa-contact-phone').value = p.phone   || '';
+  ensureContactsArray(p);
+  document.getElementById('oa-company').value = p.company || '';
+  document.getElementById('oa-sector').value  = p.sector  || '';
+  const wrap = document.getElementById('oa-contact-select-wrap');
+  const cSel = document.getElementById('oa-contact-select');
+  if (wrap && cSel) {
+    if (p.contacts.length) {
+      wrap.style.display = '';
+      cSel.innerHTML = p.contacts.map(c =>
+        `<option value="${c.id}"${c.principal ? ' selected' : ''}>${c.principal ? '★ ' : ''}${_esc0(c.nom || c.email || '(sans nom)')}${c.fonction ? ' · ' + _esc0(c.fonction) : ''}</option>`).join('');
+    } else {
+      wrap.style.display = 'none';
+      cSel.innerHTML = '<option value="">— Aucun —</option>';
+    }
+  }
+  // Étape 2 : contact principal pré-rempli (modifiable via le select contact)
+  const prim = getPrimaryContact(p);
+  _seqFillContact(prim);
+}
+
+function onSeqContactSelect(contactId) {
+  const companyId = document.getElementById('oa-prospect-select')?.value;
+  const p = crmProspects.find(x => x.id == companyId);
+  if (!p || !Array.isArray(p.contacts)) return;
+  _seqFillContact(p.contacts.find(c => c.id === contactId) || null);
+}
+
+function _seqFillContact(c) {
+  document.getElementById('oa-contact-name').value  = c ? (c.nom || '') : '';
+  document.getElementById('oa-contact-title').value = c ? (c.fonction || '') : '';
+  document.getElementById('oa-contact-email').value = c ? (c.email || '') : '';
+  document.getElementById('oa-contact-phone').value = c ? (c.telephone || '') : '';
+  const li = document.getElementById('oa-contact-linkedin');
+  if (li) li.value = c ? (c.linkedin || '') : '';
 }
 
 function clearProspectSelect() {
   document.getElementById('oa-prospect-select').value = '';
+  const wrap = document.getElementById('oa-contact-select-wrap');
+  if (wrap) wrap.style.display = 'none';
   ['oa-company','oa-sector','oa-contact-name','oa-contact-title','oa-contact-email','oa-contact-phone','oa-contact-linkedin'].forEach(id => {
     const el = document.getElementById(id); if(el) el.value = '';
   });
@@ -11139,7 +11660,7 @@ function applyRemoteData(rec) {
     if (typeof renderApiGauge === 'function') renderApiGauge();
     return;
   }
-  if (Array.isArray(rec.crm))       { crmProspects = rec.crm;   localStorage.setItem('ast_crm', JSON.stringify(rec.crm)); }
+  if (Array.isArray(rec.crm))       { crmProspects = rec.crm;   crmProspects.forEach(p => ensureContactsArray(p)); localStorage.setItem('ast_crm', JSON.stringify(crmProspects)); }
   if (Array.isArray(rec.map))       { mapCompanies = rec.map;   localStorage.setItem('ast_map_companies', JSON.stringify(rec.map)); }
   if (Array.isArray(rec.channel))   localStorage.setItem('ast_channel',   JSON.stringify(rec.channel));
   if (Array.isArray(rec.campaigns)) localStorage.setItem('ast_campaigns', JSON.stringify(rec.campaigns));
