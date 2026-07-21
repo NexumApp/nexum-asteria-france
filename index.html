@@ -2302,6 +2302,60 @@ body {
   .ft-grid, .lib-grid { grid-template-columns: 1fr 1fr; }
   .pl-kpi-strip { grid-template-columns: 1fr 1fr; }
 }
+/* ── RECHERCHE PROSPECTS IA (chat) ────────────────────────────────── */
+.pia-wrap { max-width: 880px; margin: 0 auto; padding: 28px 24px 16px; display: flex; flex-direction: column; height: calc(100vh - 130px); }
+.pia-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; margin-bottom: 14px; flex-wrap: wrap; }
+.pia-head-txt { min-width: 260px; flex: 1; }
+.pia-head-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 220px; }
+.pia-new-btn { border: 1.5px solid var(--border); background: var(--surface); color: var(--text2); border-radius: 9px; padding: 7px 14px; font-size: 12px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: all .12s; }
+.pia-new-btn:hover { border-color: var(--navy); color: var(--navy); }
+.pia-messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 6px 2px 14px; }
+.pia-msg { max-width: 82%; border-radius: 14px; padding: 11px 15px; font-size: 13.5px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
+.pia-msg-user { align-self: flex-end; background: var(--navy); color: #fff; border-bottom-right-radius: 4px; }
+.pia-msg-assistant { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); color: var(--text); border-bottom-left-radius: 4px; max-width: 100%; }
+.pia-msg-error { align-self: flex-start; background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.35); color: #b91c1c; }
+.pia-retry-btn { display: inline-block; margin-top: 8px; border: 1px solid rgba(239,68,68,0.4); background: #fff; color: #b91c1c; border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.pia-tool-line { align-self: flex-start; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text3); font-style: italic; padding: 2px 6px; }
+.pia-tool-line .pia-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--navy); animation: piaPulse 1s infinite alternate; }
+@keyframes piaPulse { from { opacity: .25; transform: scale(.8);} to { opacity: 1; transform: scale(1);} }
+.pia-inputbar { border-top: 1px solid var(--border); padding-top: 10px; }
+.pia-cost { font-size: 11px; color: var(--text3); text-align: right; padding: 0 4px 6px; }
+.pia-input-row { display: flex; gap: 10px; align-items: flex-end; }
+.pia-input { flex: 1; border: 1.5px solid var(--border); border-radius: 12px; background: var(--surface); padding: 11px 14px; font-size: 13.5px; font-family: 'Inter', sans-serif; color: var(--text); resize: none; max-height: 140px; outline: none; transition: border-color .12s; }
+.pia-input:focus { border-color: var(--navy); }
+.pia-send-btn { width: 42px; height: 42px; border-radius: 12px; border: none; background: var(--navy); color: #fff; font-size: 16px; cursor: pointer; flex: 0 0 auto; transition: opacity .12s; }
+.pia-send-btn:disabled { opacity: .45; cursor: default; }
+.pia-empty { text-align: center; padding: 36px 12px 8px; }
+.pia-empty-icon { font-size: 34px; margin-bottom: 8px; }
+.pia-empty-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.pia-empty-sub { font-size: 12.5px; color: var(--text3); margin-bottom: 18px; }
+.pia-examples { display: flex; flex-direction: column; gap: 8px; max-width: 560px; margin: 0 auto; }
+.pia-example { border: 1.5px solid var(--border); background: var(--surface); border-radius: 11px; padding: 10px 14px; font-size: 12.5px; color: var(--text2); cursor: pointer; text-align: left; transition: all .12s; font-family: 'Inter', sans-serif; }
+.pia-example:hover { border-color: var(--navy); color: var(--navy); }
+/* Cartes prospects */
+.pia-cards { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.pia-cards-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+.pia-card { border: 1px solid var(--border); background: #fff; border-radius: 12px; padding: 12px 14px; font-size: 12.5px; white-space: normal; }
+.pia-card.incomplete { border-color: rgba(245,158,11,0.55); }
+.pia-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+.pia-card-name { font-size: 13.5px; font-weight: 700; color: var(--text); }
+.pia-card-badge { font-size: 10px; font-weight: 700; background: rgba(245,158,11,0.12); color: #b45309; border: 1px solid rgba(245,158,11,0.4); border-radius: 6px; padding: 2px 7px; white-space: nowrap; }
+.pia-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 4px 14px; margin-bottom: 6px; }
+.pia-card-field { color: var(--text2); }
+.pia-card-field b { color: var(--text3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .02em; display: block; }
+.pia-card-why { font-size: 12px; color: var(--text2); background: var(--bg); border-radius: 8px; padding: 7px 10px; margin: 6px 0; }
+.pia-card-src { font-size: 10.5px; color: var(--text3); margin-top: 4px; }
+.pia-card-src a { color: var(--text3); }
+.pia-card-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; align-items: center; }
+.pia-add-btn { border: 1px solid var(--navy); background: var(--navy); color: #fff; border-radius: 8px; padding: 6px 13px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+.pia-add-btn.added { background: #16a34a; border-color: #16a34a; cursor: default; }
+.pia-add-btn.dup { background: var(--surface); color: var(--text3); border-color: var(--border); cursor: default; }
+.pia-addall-btn { border: 1.5px solid var(--navy); background: transparent; color: var(--navy); border-radius: 8px; padding: 6px 13px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; }
+.pia-fix { border-top: 1px dashed var(--border); margin-top: 8px; padding-top: 8px; }
+.pia-fix-note { font-size: 11.5px; color: #b45309; font-weight: 600; margin-bottom: 6px; }
+.pia-fix-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.pia-fix-row input { flex: 1; min-width: 140px; border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 12px; font-family: 'Inter', sans-serif; }
+@media (max-width: 640px) { .pia-msg { max-width: 94%; } .pia-wrap { height: calc(100vh - 150px); padding: 18px 12px 10px; } }
 </style>
 </head>
 <body>
@@ -2483,13 +2537,9 @@ body {
           <span class="dock-icon"><svg viewBox="0 0 24 24"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 9v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M9 21v-6h6v6"/></svg></span>
           <span class="dock-label">Accueil</span>
         </button>
-        <button class="dock-item" id="tab-company" onclick="switchTab('company')" aria-label="Par entreprise">
-          <span class="dock-icon"><svg viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M5 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16"/><path d="M15 21V9h3a1 1 0 0 1 1 1v11"/><path d="M8 8h0M11 8h0M8 12h0M11 12h0M8 16h0M11 16h0"/></svg></span>
-          <span class="dock-label">Par entreprise</span>
-        </button>
-        <button class="dock-item" id="tab-territory" onclick="switchTab('territory')" aria-label="Par territoire & secteur">
-          <span class="dock-icon"><svg viewBox="0 0 24 24"><polygon points="2 6 9 3 15 6 22 3 22 18 15 21 9 18 2 21 2 6"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg></span>
-          <span class="dock-label">Par territoire &amp; secteur</span>
+        <button class="dock-item" id="tab-prospect-ia" onclick="switchTab('prospect-ia')" aria-label="Recherche Prospects IA">
+          <span class="dock-icon"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path d="M9 10h.01M12 10h.01M15 10h.01"/></svg></span>
+          <span class="dock-label">Recherche Prospects IA</span>
         </button>
         <button class="dock-item" id="tab-map" onclick="switchTab('map')" aria-label="Carte des prospects">
           <span class="dock-icon"><svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
@@ -2636,172 +2686,35 @@ body {
       </div>
     </div>
 
-    <!-- PANEL 1 : PAR ENTREPRISE -->
-    <div class="tab-panel" id="panel-company">
-      <div class="search-section">
-        <h1 class="search-heading">Trouvez les <span>décideurs</span> de vos cibles</h1>
-        <p class="search-desc">Entrez le nom d'une entreprise pour obtenir ses contacts clés avec leurs coordonnées.</p>
-        <div class="api-gauge" title="Crédit IA mensuel de l'équipe — part restante ce mois-ci">
-          <div class="api-gauge-head">
-            <span class="api-gauge-lbl">⚡ Crédit IA restant ce mois (équipe)</span>
-            <span class="api-gauge-pct">100%</span>
+    <!-- PANEL 1 : RECHERCHE PROSPECTS IA (assistant conversationnel) -->
+    <div class="tab-panel" id="panel-prospect-ia">
+      <div class="pia-wrap">
+        <div class="pia-head">
+          <div class="pia-head-txt">
+            <h1 class="search-heading">Recherche Prospects <span>IA</span></h1>
+            <p class="search-desc" id="pia-engine-note">Décris ta cible en français — l'assistant croise la base mondiale Explorium et le web pour proposer des prospects qualifiés.</p>
           </div>
-          <div class="api-gauge-track"><div class="api-gauge-fill"></div></div>
-        </div>
-        <div id="engine-switch-co"></div>
-        <div class="search-card">
-          <div class="search-row">
-            <span class="search-icon">🔍</span>
-            <input class="main-input" id="company-input" type="text"
-              placeholder="ex: Schneider Electric, Sodexo, Veolia, BNP Paribas…"
-              onkeydown="if(event.key==='Enter') doSearch()" />
-            <div class="search-divider"></div>
-            <button class="btn-search" id="search-btn" onclick="doSearch()">
-              <span id="btn-icon">⚡</span>
-              <span id="btn-text">Rechercher</span>
-            </button>
-          </div>
-          <div class="company-geo">
-            <div class="role-target-lbl">📍 Localisation <span class="role-target-hint">(optionnel — affine / désambiguïse la recherche)</span></div>
-            <div class="company-geo-row">
-              <input class="geo-field" id="company-city" type="text" placeholder="Ville (si connue)" autocomplete="off"
-                onkeydown="if(event.key==='Enter') doSearch()" />
-              <select class="geo-field" id="company-region" onchange="onCompanyRegionChange()"><option value="">Région…</option></select>
-              <select class="geo-field" id="company-dept"><option value="">Département…</option></select>
+          <div class="pia-head-right">
+            <div class="api-gauge" title="Crédit IA mensuel de l'équipe — part restante ce mois-ci">
+              <div class="api-gauge-head">
+                <span class="api-gauge-lbl">⚡ Crédit IA restant ce mois (équipe)</span>
+                <span class="api-gauge-pct">100%</span>
+              </div>
+              <div class="api-gauge-track"><div class="api-gauge-fill"></div></div>
             </div>
-          </div>
-          <div class="role-target">
-            <div class="role-target-lbl">🎯 Cibler les contacts <span class="role-target-hint">(optionnel — tous par défaut)</span></div>
-            <div class="role-chips" id="company-role-chips">
-              <div class="role-chip" data-role="achats"      onclick="toggleRoleChip(this)">🛒 Achats</div>
-              <div class="role-chip" data-role="direction"   onclick="toggleRoleChip(this)">👔 Direction</div>
-              <div class="role-chip" data-role="marketing"   onclick="toggleRoleChip(this)">📣 Marketing</div>
-              <div class="role-chip" data-role="production"  onclick="toggleRoleChip(this)">🏭 Production</div>
-              <div class="role-chip" data-role="qualite"     onclick="toggleRoleChip(this)">🔬 Qualité / R&D</div>
-              <div class="role-chip" data-role="commercial"  onclick="toggleRoleChip(this)">🤝 Commercial</div>
-              <div class="role-chip" data-role="supplychain" onclick="toggleRoleChip(this)">🚚 Supply Chain</div>
-            </div>
-          </div>
-          <div class="progress-bar" id="progress-bar">
-            <div class="prog-step" id="step-1"><div class="prog-dot"></div> Identification</div>
-            <div style="color:#e2e8f0;font-size:12px">›</div>
-            <div class="prog-step" id="step-2"><div class="prog-dot"></div> Contacts</div>
-            <div style="color:#e2e8f0;font-size:12px">›</div>
-            <div class="prog-step" id="step-3"><div class="prog-dot"></div> Enrichissement</div>
-            <div style="color:#e2e8f0;font-size:12px">›</div>
-            <div class="prog-step" id="step-4"><div class="prog-dot"></div> Résultats</div>
+            <button class="pia-new-btn" onclick="piaNewConversation()" title="Efface la conversation en cours (aucun historique conservé)">🔄 Nouvelle recherche</button>
           </div>
         </div>
-        <div class="history-bar" id="history-bar"></div>
-      </div>
-      <div class="error-banner" id="error-banner"></div>
-      <div id="results-zone">
-        <div class="empty-state">
-          <div class="empty-icon">🎯</div>
-          <div class="empty-title">Prêt pour la prospection</div>
-          <div class="empty-sub">Tapez le nom d'une entreprise ci-dessus pour trouver ses décideurs et leurs coordonnées.</div>
+        <div class="pia-messages" id="pia-messages"></div>
+        <div class="pia-inputbar">
+          <div class="pia-cost" id="pia-cost" style="display:none"></div>
+          <div class="pia-input-row">
+            <textarea class="pia-input" id="pia-input" rows="1" placeholder="Ex : PME agroalimentaires en Belgique, 50-200 salariés…" onkeydown="piaKeydown(event)" oninput="piaAutosize(this)"></textarea>
+            <button class="pia-send-btn" id="pia-send-btn" onclick="piaSend()" title="Envoyer (Entrée)">➤</button>
+          </div>
         </div>
       </div>
     </div>
-
-    <!-- PANEL 2 : PAR TERRITOIRE -->
-    <div class="tab-panel" id="panel-territory">
-      <div class="search-section">
-        <h1 class="search-heading">Prospecter par <span>territoire</span></h1>
-        <p class="search-desc">Ciblez une région et un ou plusieurs secteurs pour découvrir les entreprises et leurs décideurs.</p>
-        <div class="api-gauge" title="Crédit IA mensuel de l'équipe — part restante ce mois-ci">
-          <div class="api-gauge-head">
-            <span class="api-gauge-lbl">⚡ Crédit IA restant ce mois (équipe)</span>
-            <span class="api-gauge-pct">100%</span>
-          </div>
-          <div class="api-gauge-track"><div class="api-gauge-fill"></div></div>
-        </div>
-        <div id="engine-switch-t"></div>
-
-        <div class="territory-card">
-          <!-- Région + taille -->
-          <div class="field-group" style="margin-bottom:16px">
-            <div class="field-lbl">📍 Zone géographique <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">(région ou département)</span></div>
-            <div class="region-picker" id="region-picker"></div>
-            <div class="territory-geo-hint" id="territory-geo-hint">Zone ciblée : Toute la France</div>
-          </div>
-          <div class="territory-grid">
-            <div class="field-group">
-              <div class="field-lbl">👥 Taille d'entreprise</div>
-              <select class="field-select" id="size-select">
-                <option value="">-- Toutes tailles --</option>
-                <option value="TPE (1-9 salariés)">TPE (1-9 salariés)</option>
-                <option value="PME (10-249 salariés)">PME (10-249 salariés)</option>
-                <option value="ETI (250-4999 salariés)">ETI (250-4 999 salariés)</option>
-                <option value="Grande entreprise (5000+ salariés)">Grande entreprise (5 000+)</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Secteurs -->
-          <div class="field-lbl" style="margin-bottom:10px">🏭 Secteur(s) d'activité <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">(sélection multiple)</span></div>
-          <div class="sector-grid" id="sector-grid">
-            <div class="sector-chip" data-sector="Agroalimentaire" onclick="toggleSector(this)"><span class="chip-icon">🌾</span>Agroalimentaire</div>
-            <div class="sector-chip" data-sector="Industrie manufacturière" onclick="toggleSector(this)"><span class="chip-icon">⚙️</span>Industrie</div>
-            <div class="sector-chip" data-sector="Cosmétique & Beauté" onclick="toggleSector(this)"><span class="chip-icon">💄</span>Cosmétique</div>
-            <div class="sector-chip" data-sector="Chimie & Pétrochimie" onclick="toggleSector(this)"><span class="chip-icon">🧪</span>Chimie</div>
-            <div class="sector-chip" data-sector="Logistique & Transport" onclick="toggleSector(this)"><span class="chip-icon">🚛</span>Logistique</div>
-            <div class="sector-chip" data-sector="Pharmaceutique & Santé" onclick="toggleSector(this)"><span class="chip-icon">💊</span>Pharma & Santé</div>
-            <div class="sector-chip" data-sector="Technologies & Numérique" onclick="toggleSector(this)"><span class="chip-icon">💻</span>Tech & Numérique</div>
-            <div class="sector-chip" data-sector="Construction & BTP" onclick="toggleSector(this)"><span class="chip-icon">🏗️</span>BTP</div>
-            <div class="sector-chip" data-sector="Énergie & Environnement" onclick="toggleSector(this)"><span class="chip-icon">⚡</span>Énergie</div>
-            <div class="sector-chip" data-sector="Distribution & Retail" onclick="toggleSector(this)"><span class="chip-icon">🛒</span>Retail</div>
-            <div class="sector-chip" data-sector="Finance & Assurance" onclick="toggleSector(this)"><span class="chip-icon">🏦</span>Finance</div>
-            <div class="sector-chip" data-sector="Automobile & Mobilité" onclick="toggleSector(this)"><span class="chip-icon">🚗</span>Automobile</div>
-            <div class="sector-chip" data-sector="Aéronautique & Défense" onclick="toggleSector(this)"><span class="chip-icon">✈️</span>Aéro & Défense</div>
-            <div class="sector-chip" data-sector="Agriculture" onclick="toggleSector(this)"><span class="chip-icon">🌱</span>Agriculture</div>
-            <div class="sector-chip" data-sector="Luxe & Mode" onclick="toggleSector(this)"><span class="chip-icon">👜</span>Luxe & Mode</div>
-            <div class="sector-chip" data-sector="Hôtellerie & Restauration" onclick="toggleSector(this)"><span class="chip-icon">🍽️</span>HoReCa</div>
-          </div>
-
-          <div class="role-target" style="margin-top:16px">
-            <div class="role-target-lbl">🎯 Cibler les contacts <span class="role-target-hint">(optionnel — tous par défaut)</span></div>
-            <div class="role-chips" id="territory-role-chips">
-              <div class="role-chip" data-role="achats"      onclick="toggleRoleChip(this)">🛒 Achats</div>
-              <div class="role-chip" data-role="direction"   onclick="toggleRoleChip(this)">👔 Direction</div>
-              <div class="role-chip" data-role="marketing"   onclick="toggleRoleChip(this)">📣 Marketing</div>
-              <div class="role-chip" data-role="production"  onclick="toggleRoleChip(this)">🏭 Production</div>
-              <div class="role-chip" data-role="qualite"     onclick="toggleRoleChip(this)">🔬 Qualité / R&D</div>
-              <div class="role-chip" data-role="commercial"  onclick="toggleRoleChip(this)">🤝 Commercial</div>
-              <div class="role-chip" data-role="supplychain" onclick="toggleRoleChip(this)">🚚 Supply Chain</div>
-            </div>
-          </div>
-
-          <div class="territory-footer">
-            <div class="territory-hint" id="territory-hint">Sélectionnez au moins un secteur</div>
-            <button class="btn-search" id="territory-btn" onclick="doTerritorySearch()">
-              <span id="territory-icon">🗺️</span>
-              <span id="territory-text">Lancer la prospection</span>
-            </button>
-          </div>
-
-          <div class="progress-bar" id="progress-bar-t" style="margin-top:14px">
-            <div class="prog-step" id="tstep-1"><div class="prog-dot"></div> Recherche entreprises</div>
-            <div style="color:#e2e8f0;font-size:12px">›</div>
-            <div class="prog-step" id="tstep-2"><div class="prog-dot"></div> Sélection</div>
-            <div style="color:#e2e8f0;font-size:12px">›</div>
-            <div class="prog-step" id="tstep-3"><div class="prog-dot"></div> Enrichissement</div>
-            <div style="color:#e2e8f0;font-size:12px">›</div>
-            <div class="prog-step" id="tstep-4"><div class="prog-dot"></div> Résultats</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="error-banner" id="error-banner-t"></div>
-      <div id="results-zone-t">
-        <div class="empty-state">
-          <div class="empty-icon">🗺️</div>
-          <div class="empty-title">Définissez votre territoire</div>
-          <div class="empty-sub">Choisissez une région et des secteurs pour identifier les entreprises et leurs contacts clés.</div>
-        </div>
-      </div>
-    </div>
-
     <!-- PANEL 3 : CARTE -->
     <div class="tab-panel" id="panel-map">
       <div class="map-topbar">
@@ -4030,7 +3943,6 @@ function showApp() {
   applyRoleLayout(role);
   initHome();
   if (role === 'commercial') {
-    loadHistory();
     syncCrmToMap();
   }
   startAutoSync();
@@ -4041,7 +3953,7 @@ function showApp() {
 function isDirector() { return localStorage.getItem('ast_role') === 'director'; }
 
 function applyRoleLayout(role) {
-  const commercialTabs = ['tab-company','tab-territory','tab-map','tab-crm','tab-carte','tab-outreach','tab-pipeline'];
+  const commercialTabs = ['tab-prospect-ia','tab-map','tab-crm','tab-carte','tab-outreach','tab-pipeline'];
   const marketingTabs  = ['tab-campaigns','tab-fiches','tab-samples'];
   if (role === 'marketing') {
     commercialTabs.forEach(id => { const el=document.getElementById(id); if(el) el.style.display='none'; });
@@ -4103,6 +4015,7 @@ function addHistory(name) {
 
 function renderHistory() {
   const bar = document.getElementById('history-bar');
+  if (!bar) return;   // ancienne UI de recherche retirée
   if (!searchHistory.length) { bar.style.display = 'none'; return; }
   bar.style.display = 'flex';
   bar.innerHTML = '<span style="font-size:11px;color:#94a3b8;align-self:center;">Récents:</span>' +
@@ -5262,6 +5175,455 @@ function addCardToCRM() {
     </div>`;
 }
 
+// ══════════════ RECHERCHE PROSPECTS IA — assistant conversationnel ══════════════
+// Remplace l'ancienne UI de recherche (Par entreprise / Par territoire). Les moteurs
+// historiques (callProspecting*, callExploriumMCP) restent dans le fichier ; l'assistant
+// utilise directement les outils serveur : web_search + Explorium via mcp_servers.
+const AI_MODEL_ASSISTANT = 'claude-sonnet-4-6';
+const PIA_MAX_TOKENS = 4000;
+const PIA_MAX_ROUNDS = 6;   // continuations pause_turn max au sein d'UNE réponse
+
+let _piaApiMessages = [];     // historique API (tours user + tours assistant texte-seul)
+let _piaBusy = false;
+let _piaAbort = null;
+let _piaCostEur = 0;
+let _piaCards = {};           // id → { data, added, groupId }
+let _piaCardSeq = 0;
+let _piaHadError = false;
+
+function _piaExploriumOn() { return !!getExploriumToken(); }
+
+function PIA_SYSTEM() {
+  const exNote = _piaExploriumOn()
+    ? `- Croise TOUJOURS tes deux sources : Explorium (firmographie fiable : secteur, effectif, localisation, décideurs) ET la recherche web (signaux récents : recrutements, lancements produits, levées de fonds, ouvertures de site, actualité packaging/étiquetage). La firmographie vient d'Explorium en priorité, les signaux du web.`
+    : `- Explorium n'est PAS connecté dans cette session : utilise UNIQUEMENT la recherche web, et signale-le en une demi-phrase dans ta première réponse.`;
+  return `Tu es l'assistant de prospection B2B d'Astéria France, fabricant d'étiquettes adhésives sur mesure (secteurs forts : agroalimentaire, cosmétique, pharma, vins & spiritueux, chimie, industrie, logistique). Tu discutes en français avec un commercial.
+
+MISSION : transformer sa demande en langage naturel en une liste de prospects ULTRA qualifiés.
+
+MÉTHODE :
+- Si la demande est trop vague pour cibler (ni secteur, ni zone, ni taille, ni signal), pose UNE SEULE question de clarification, courte — puis lance la recherche dès la réponse. Jamais plus d'une question ; si la demande est exploitable, cherche directement.
+${exNote}
+- Sois concis et opérationnel : phrases courtes, zéro remplissage. Réponds toujours en français.
+- Affine au fil de la conversation : si le commercial ajuste ("plutôt 50-200 salariés", "enlève les sous-traitants"), repars des résultats précédents et corrige la liste.
+
+FIABILITÉ ABSOLUE (priorité sur tout le reste) :
+- CHAQUE valeur (secteur, effectif, ville, pays, site web, contact, email, téléphone) doit provenir d'un résultat d'outil de CETTE conversation. Ne JAMAIS inventer, inférer ou compléter : pas d'email deviné par schéma "prenom.nom@…", pas d'URL construite, pas d'effectif estimé au doigt mouillé.
+- Donnée introuvable = null. Un null vaut TOUJOURS mieux qu'une valeur douteuse : une firmographie hallucinée est pire qu'une case vide.
+- RGPD : uniquement des données professionnelles B2B publiques ; aucune donnée personnelle privée ; aucun contournement de protections.
+
+FORMAT DE SORTIE — OBLIGATOIRE dès que tu proposes des entreprises :
+1) Une courte synthèse en prose (2 à 5 phrases : ce que tu as cherché, combien de résultats, ta reco).
+2) PUIS un bloc de code délimité EXACTEMENT ainsi :
+\`\`\`json-prospects
+{"prospects":[{"name":"Raison sociale","sector":"Secteur ou null","size":"Effectif ou null","location":{"city":"Ville ou null","country":"Pays ou null"},"website":"site.fr ou null","contact":{"name":"Prénom Nom","title":"Fonction"} ou null,"email":"… ou null","phone":"… ou null","why":"1 phrase : pourquoi ce prospect est pertinent pour un fabricant d'étiquettes","source":{"engine":"explorium" ou "web","url":"URL de la source principale ou null"}}]}
+\`\`\`
+- JSON strictement valide (pas de commentaire, pas de virgule finale). 3 à 10 prospects par réponse. "why" TOUJOURS renseigné. "source" TOUJOURS renseigné : engine = d'où viennent les données firmographiques de CETTE entreprise, url = page consultée (null autorisé pour explorium).
+- N'inclus JAMAIS ce bloc quand tu poses une question de clarification ou quand tu n'as pas de résultat.`;
+}
+
+// ── UI de base ────────────────────────────────────────────────────────
+function piaInit() {
+  const note = document.getElementById('pia-engine-note');
+  if (note) note.textContent = _piaExploriumOn()
+    ? "Décris ta cible en français — l'assistant croise la base mondiale Explorium et le web pour proposer des prospects qualifiés."
+    : "Décris ta cible en français — l'assistant cherche sur le web. (Explorium non connecté : configurable dans les paramètres admin.)";
+  if (!_piaApiMessages.length && !document.getElementById('pia-empty')) piaRenderEmpty();
+  piaUpdateCost();
+}
+
+function piaRenderEmpty() {
+  const zone = document.getElementById('pia-messages');
+  if (!zone) return;
+  zone.innerHTML = `<div class="pia-empty" id="pia-empty">
+    <div class="pia-empty-icon">🎯</div>
+    <div class="pia-empty-title">Décris la cible, l'IA fait la prospection</div>
+    <div class="pia-empty-sub">Secteur, zone, taille, signaux d'achat… en une phrase. Chaque « Nouvelle recherche » repart de zéro.</div>
+    <div class="pia-examples">
+      <button class="pia-example" onclick="piaExample(this)">🏭 Trouve-moi des industriels du packaging dans le Nord qui recrutent</button>
+      <button class="pia-example" onclick="piaExample(this)">🧀 PME agroalimentaires en Belgique, 50-200 salariés</button>
+      <button class="pia-example" onclick="piaExample(this)">🍷 Domaines viticoles en Bourgogne qui lancent de nouvelles cuvées</button>
+      <button class="pia-example" onclick="piaExample(this)">💄 Cosmétique en Île-de-France : levées de fonds ou nouveaux sites récents ?</button>
+    </div>
+  </div>`;
+}
+
+function piaExample(btn) {
+  const input = document.getElementById('pia-input');
+  if (!input) return;
+  input.value = btn.textContent.replace(/^[^\s]+\s/, '').trim();
+  piaSend();
+}
+
+function piaNewConversation() {
+  if (_piaAbort) { try { _piaAbort.abort(); } catch(e){} _piaAbort = null; }
+  _piaApiMessages = []; _piaCards = {}; _piaCostEur = 0; _piaBusy = false; _piaHadError = false;
+  const btn = document.getElementById('pia-send-btn'); if (btn) btn.disabled = false;
+  piaRenderEmpty();
+  piaUpdateCost();
+}
+
+function piaKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); piaSend(); }
+}
+function piaAutosize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 140) + 'px'; }
+
+function _piaEsc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _piaScroll() { const z = document.getElementById('pia-messages'); if (z) z.scrollTop = z.scrollHeight; }
+// Prose visible = texte sans le bloc json-prospects ; gras **…** rendu, reste échappé.
+function _piaProseHtml(text) {
+  const cut = String(text || '').replace(/\`\`\`json-prospects[\s\S]*?(\`\`\`|$)/g, '').replace(/\`\`\`json[\s\S]*?(\`\`\`|$)/g, '').trim();
+  return _piaEsc(cut).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+}
+
+function piaAppendBubble(cls, html) {
+  const zone = document.getElementById('pia-messages');
+  if (!zone) return null;
+  const empty = document.getElementById('pia-empty'); if (empty) empty.remove();
+  const div = document.createElement('div');
+  div.className = 'pia-msg ' + cls;
+  div.innerHTML = html;
+  zone.appendChild(div);
+  _piaScroll();
+  return div;
+}
+
+function piaUpdateCost() {
+  const el = document.getElementById('pia-cost');
+  if (!el) return;
+  if (_piaCostEur > 0) {
+    el.style.display = 'block';
+    el.textContent = 'Coût estimé de cette conversation : ~' + _piaCostEur.toFixed(2).replace('.', ',') + ' € (décompté du crédit équipe)';
+  } else { el.style.display = 'none'; }
+}
+function _piaEstimateEur(usage) {
+  if (!usage) return 0;
+  const usd = (usage.input_tokens||0)*API_PRICING.inPerTok + (usage.output_tokens||0)*API_PRICING.outPerTok
+    + (((usage.server_tool_use||{}).web_search_requests)||0)*API_PRICING.perWebSearch;
+  return usd * API_PRICING.eurPerUsd;
+}
+
+// ── Envoi ─────────────────────────────────────────────────────────────
+function piaSend() {
+  if (_piaBusy) return;
+  const input = document.getElementById('pia-input');
+  const text = (input?.value || '').trim();
+  if (!text) return;
+  const apiKey = localStorage.getItem('ast_api_key');
+  if (!apiKey) { alert('Clé API manquante — vérifiez les paramètres admin.'); return; }
+  input.value = ''; piaAutosize(input);
+  _piaApiMessages.push({ role: 'user', content: text });
+  piaAppendBubble('pia-msg-user', _piaEsc(text));
+  piaRunAssistant();
+}
+
+function piaRetry() {
+  if (_piaBusy) return;
+  document.querySelectorAll('.pia-msg-error').forEach(el => el.remove());
+  piaRunAssistant();
+}
+
+// ── Cœur : appel Messages API en streaming, multi-tour ────────────────
+async function piaRunAssistant() {
+  _piaBusy = true; _piaHadError = false;
+  const sendBtn = document.getElementById('pia-send-btn'); if (sendBtn) sendBtn.disabled = true;
+  _piaAbort = new AbortController();
+  const signal = _piaAbort.signal;
+
+  // Bulle assistant en cours + ligne d'activité outils
+  const liveBubble = piaAppendBubble('pia-msg-assistant', '');
+  const toolLine = document.createElement('div');
+  toolLine.className = 'pia-tool-line';
+  toolLine.innerHTML = '<span class="pia-dot"></span><span id="pia-tool-txt">L\'assistant réfléchit…</span>';
+  liveBubble.after(toolLine);
+  _piaScroll();
+  const setActivity = (txt) => { const t = document.getElementById('pia-tool-txt'); if (t) t.textContent = txt; };
+
+  const exOn = _piaExploriumOn();
+  const tools = [{ type: 'web_search_20260209', name: 'web_search', max_uses: 8 }];
+  const headers = {
+    'Content-Type': 'application/json',
+    'x-api-key': localStorage.getItem('ast_api_key'),
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true'
+  };
+  let mcpServers = null;
+  if (exOn) {
+    tools.push({ type: 'mcp_toolset', mcp_server_name: EXPLORIUM_MCP_NAME });
+    mcpServers = [{ type: 'url', url: EXPLORIUM_MCP_URL, name: EXPLORIUM_MCP_NAME, authorization_token: getExploriumToken() }];
+    headers['anthropic-beta'] = EXPLORIUM_MCP_BETA;
+  }
+
+  let innerMessages = _piaApiMessages.slice();   // continuation pause_turn au sein du tour
+  let turnText = '';                             // texte cumulé de la réponse (tous rounds)
+  let rounds = 0;
+
+  try {
+    while (rounds < PIA_MAX_ROUNDS) {
+      rounds++;
+      if (signal.aborted) throw new Error('__CANCELLED__');
+
+      const body = {
+        model: AI_MODEL_ASSISTANT,
+        max_tokens: PIA_MAX_TOKENS,
+        stream: true,
+        cache_control: { type: 'ephemeral' },
+        system: PIA_SYSTEM(),
+        messages: innerMessages,
+        tools
+      };
+      if (mcpServers) body.mcp_servers = mcpServers;
+
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST', headers, body: JSON.stringify(body), signal
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(_apiErr(resp.status, err.error && err.error.message));
+      }
+
+      // ── Lecture SSE : blocs reconstruits par index, INTERPRÉTÉS par type ──
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = '', blocks = [], stopReason = null, usage = null, streamErr = null, roundText = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        let sep;
+        while ((sep = buf.indexOf('\n\n')) >= 0) {
+          const rawEvent = buf.slice(0, sep); buf = buf.slice(sep + 2);
+          const dataLine = rawEvent.split('\n').find(l => l.startsWith('data:'));
+          if (!dataLine) continue;
+          let ev; try { ev = JSON.parse(dataLine.slice(5).trim()); } catch(e) { continue; }
+          if (ev.type === 'message_start') { if (ev.message && ev.message.usage) usage = ev.message.usage; }
+          else if (ev.type === 'content_block_start') {
+            const b = Object.assign({}, ev.content_block);
+            if (b.type === 'text' && b.text == null) b.text = '';
+            blocks[ev.index] = b;
+            if (b.type === 'server_tool_use') setActivity('🔎 Recherche web en cours…');
+            else if (b.type === 'mcp_tool_use') setActivity('🌐 Interrogation base mondiale (Explorium' + (b.name ? ' · ' + b.name : '') + ')…');
+            else if (b.type === 'web_search_tool_result' || b.type === 'mcp_tool_result') setActivity('📥 Analyse des résultats…');
+            else if (b.type === 'text') setActivity('✍️ Rédaction de la réponse…');
+          }
+          else if (ev.type === 'content_block_delta') {
+            const b = blocks[ev.index]; if (!b) continue;
+            if (ev.delta.type === 'text_delta') {
+              b.text = (b.text || '') + ev.delta.text;
+              if (b.type === 'text') {
+                roundText = blocks.filter(x => x && x.type === 'text').map(x => x.text || '').join('');
+                liveBubble.innerHTML = _piaProseHtml(turnText + roundText) || '…';
+                _piaScroll();
+              }
+            } else if (ev.delta.type === 'input_json_delta') { b._pj = (b._pj || '') + (ev.delta.partial_json || ''); }
+          }
+          else if (ev.type === 'content_block_stop') { const b = blocks[ev.index]; if (b && b._pj !== undefined) { try { b.input = JSON.parse(b._pj); } catch(e) {} delete b._pj; } }
+          else if (ev.type === 'message_delta') { if (ev.delta && ev.delta.stop_reason) stopReason = ev.delta.stop_reason; if (ev.usage) usage = Object.assign({}, usage, ev.usage); }
+          else if (ev.type === 'error') { streamErr = (ev.error && ev.error.message) || 'Erreur de streaming Anthropic'; }
+        }
+      }
+      if (streamErr) throw new Error(_apiErr(0, streamErr));
+      if (usage) { trackApiUsage(usage); _piaCostEur += _piaEstimateEur(usage); piaUpdateCost(); }
+
+      const content = blocks.filter(Boolean);
+      roundText = content.filter(b => b.type === 'text').map(b => b.text || '').join('');
+      turnText += roundText;
+
+      if (stopReason === 'pause_turn' && rounds < PIA_MAX_ROUNDS) {
+        // Cap serveur atteint en pleine recherche → on renvoie le contenu tel quel pour reprendre.
+        innerMessages = innerMessages.concat([{ role: 'assistant', content }]);
+        setActivity('⏳ La recherche continue…');
+        continue;
+      }
+      break;   // end_turn, max_tokens, ou dernier round → on rend ce qu'on a
+    }
+
+    toolLine.remove();
+    // Historique durable : texte seul (le bloc json-prospects porte les données pour les tours suivants)
+    _piaApiMessages.push({ role: 'assistant', content: [{ type: 'text', text: turnText || '(réponse vide)' }] });
+    piaFinalizeAssistant(liveBubble, turnText);
+  } catch (e) {
+    toolLine.remove();
+    // On retire la bulle vide et, en erreur, le tour ne compte pas : le retry rejouera le même historique.
+    liveBubble.remove();
+    if (!(e && e.message === '__CANCELLED__') && !signal.aborted) {
+      _piaHadError = true;
+      const msg = (e && e.message) || 'Erreur inconnue';
+      piaAppendBubble('pia-msg-error', '⚠️ ' + _piaEsc(msg) + '<br><button class="pia-retry-btn" onclick="piaRetry()">↺ Réessayer</button>');
+    }
+  } finally {
+    _piaBusy = false; _piaAbort = null;
+    const btn = document.getElementById('pia-send-btn'); if (btn) btn.disabled = false;
+    _piaScroll();
+  }
+}
+
+// ── Finalisation : prose + cartes prospects ───────────────────────────
+function piaFinalizeAssistant(bubble, fullText) {
+  const prospects = piaExtractProspects(fullText);
+  let html = _piaProseHtml(fullText) || '(réponse vide)';
+  if (prospects && prospects.length) {
+    const groupId = 'g' + (++_piaCardSeq);
+    const cardsHtml = prospects.map(p => {
+      const id = 'c' + (++_piaCardSeq);
+      _piaCards[id] = { data: p, added: false, groupId };
+      return piaCardHtml(id, p);
+    }).join('');
+    html += `<div class="pia-cards">${cardsHtml}</div>
+      <div class="pia-cards-actions"><button class="pia-addall-btn" onclick="piaAddAll('${groupId}')">➕ Tout ajouter au CRM</button></div>`;
+  }
+  bubble.innerHTML = html;
+  _piaScroll();
+}
+
+// Bloc \`\`\`json-prospects (ou \`\`\`json) → tableau normalisé, ou null si invalide.
+function piaExtractProspects(text) {
+  const m = String(text || '').match(/\`\`\`json-prospects\s*([\s\S]*?)\`\`\`/) || String(text || '').match(/\`\`\`json\s*([\s\S]*?)\`\`\`/);
+  if (!m) return null;
+  let parsed;
+  try { parsed = JSON.parse(m[1].trim()); } catch(e) { console.warn('[PIA] Bloc JSON invalide — cartes non affichées.', e); return null; }
+  const arr = Array.isArray(parsed) ? parsed : parsed && Array.isArray(parsed.prospects) ? parsed.prospects : null;
+  if (!arr) return null;
+  const str = v => (typeof v === 'string' && v.trim() && v.trim().toLowerCase() !== 'null') ? v.trim() : null;
+  return arr.filter(p => p && str(p.name)).map(p => ({
+    name:    str(p.name),
+    sector:  str(p.sector),
+    size:    str(p.size),
+    city:    str(p.location && p.location.city),
+    country: str(p.location && p.location.country),
+    website: str(p.website),
+    contactName:  str(p.contact && p.contact.name),
+    contactTitle: str(p.contact && p.contact.title),
+    email:   str(p.email),
+    phone:   str(p.phone),
+    why:     str(p.why),
+    sourceEngine: (p.source && p.source.engine === 'explorium') ? 'explorium' : 'web',
+    sourceUrl:    str(p.source && p.source.url)
+  }));
+}
+
+function piaCardHtml(id, p) {
+  const d = v => v ? _piaEsc(v) : '—';
+  const incomplete = !p.sector || !p.size;
+  const loc = [p.city, p.country].filter(Boolean).join(', ');
+  const src = p.sourceEngine === 'explorium' ? 'Explorium' : 'web';
+  const srcUrl = p.sourceUrl ? ` · <a href="${_piaEsc(p.sourceUrl)}" target="_blank" rel="noopener">${_piaEsc(p.sourceUrl.replace(/^https?:\/\//,'').split('/')[0])}</a>` : '';
+  return `<div class="pia-card${incomplete ? ' incomplete' : ''}" id="pia-card-${id}">
+    <div class="pia-card-head">
+      <div class="pia-card-name">${d(p.name)}</div>
+      ${incomplete ? '<div class="pia-card-badge">⚠ Fiche incomplète</div>' : ''}
+    </div>
+    <div class="pia-card-grid">
+      <div class="pia-card-field"><b>Secteur</b>${d(p.sector)}</div>
+      <div class="pia-card-field"><b>Taille (effectif)</b>${d(p.size)}</div>
+      <div class="pia-card-field"><b>Localisation</b>${loc ? _piaEsc(loc) : '—'}</div>
+      <div class="pia-card-field"><b>Site web</b>${p.website ? `<a href="${_piaEsc(/^https?:/.test(p.website) ? p.website : 'https://' + p.website)}" target="_blank" rel="noopener">${d(p.website)}</a>` : '—'}</div>
+      <div class="pia-card-field"><b>Contact</b>${p.contactName ? d(p.contactName) + (p.contactTitle ? ' · ' + d(p.contactTitle) : '') : '—'}</div>
+      <div class="pia-card-field"><b>Email</b>${d(p.email)}</div>
+      <div class="pia-card-field"><b>Téléphone</b>${d(p.phone)}</div>
+    </div>
+    ${p.why ? `<div class="pia-card-why">💡 ${d(p.why)}</div>` : ''}
+    <div class="pia-card-src">Source : ${src}${srcUrl} — données issues des outils, jamais inventées (RGPD : données pro B2B publiques)</div>
+    <div class="pia-fix" id="pia-fix-${id}" style="display:none">
+      <div class="pia-fix-note">Données incomplètes — compléter avant ajout :</div>
+      <div class="pia-fix-row">
+        <input type="text" id="pia-fix-sector-${id}" placeholder="Secteur d'activité *" value="${p.sector ? _piaEsc(p.sector) : ''}" />
+        <input type="text" id="pia-fix-size-${id}" placeholder="Taille / effectif *" value="${p.size ? _piaEsc(p.size) : ''}" />
+      </div>
+    </div>
+    <div class="pia-card-foot">
+      <span id="pia-add-note-${id}" style="font-size:11px;color:var(--text3)"></span>
+      <button class="pia-add-btn" id="pia-add-${id}" onclick="piaAddToCrm('${id}')">➕ Ajouter au CRM</button>
+    </div>
+  </div>`;
+}
+
+// ── Ajout CRM (dédup règle import, blocage si incomplet, pin carte) ───
+function _piaIsDup(p) {
+  const me = localStorage.getItem('ast_commercial') || '';
+  const key = _importDupKey({ company: p.name, contactName: p.contactName || '', email: p.email || '' });
+  return crmProspects.some(x => x.commercial === me &&
+    _importDupKey({ company: x.company, contactName: x.contactName, email: x.email }) === key);
+}
+
+function piaAddToCrm(id) {
+  const card = _piaCards[id];
+  if (!card || card.added) return;
+  const p = card.data;
+  const btn  = document.getElementById('pia-add-' + id);
+  const note = document.getElementById('pia-add-note-' + id);
+
+  // Blocage : secteur ET taille obligatoires (saisie inline si manquants)
+  const fixBox = document.getElementById('pia-fix-' + id);
+  const fixSector = (document.getElementById('pia-fix-sector-' + id)?.value || '').trim();
+  const fixSize   = (document.getElementById('pia-fix-size-' + id)?.value || '').trim();
+  const sector = p.sector || fixSector;
+  const size   = p.size   || fixSize;
+  if (!sector || !size) {
+    if (fixBox) fixBox.style.display = 'block';
+    if (note) note.textContent = 'Données incomplètes — compléter avant ajout.';
+    return;
+  }
+  if (fixBox) fixBox.style.display = 'none';
+
+  // Dédup — même règle que l'import Excel (entreprise|contact|email, périmètre : mes fiches)
+  if (_piaIsDup(p)) {
+    card.added = true;
+    if (btn) { btn.textContent = '✔ Déjà dans votre CRM'; btn.classList.add('dup'); btn.disabled = true; }
+    if (note) note.textContent = 'Doublon détecté — aucune fiche créée.';
+    return { dup: true };
+  }
+
+  const me = localStorage.getItem('ast_commercial') || '';
+  const address = [p.city, p.country].filter(Boolean).join(', ');
+  const prospect = {
+    id: Date.now() + (_piaCardSeq++),
+    company: p.name, sector, size,
+    address,
+    website: p.website || '',
+    contactName:  p.contactName  || '',
+    contactTitle: p.contactTitle || '',
+    email: p.email || '', phone: p.phone || '',
+    linkedin: '',
+    notes: [p.why, '🤖 Recherche IA'].filter(Boolean).join(' · '),
+    status: 'cold',
+    commercial: me,
+    createdAt: Date.now(),
+    lat: null, lng: null,
+    source: { engine: p.sourceEngine, url: p.sourceUrl || null }   // traçabilité RGPD
+  };
+  crmProspects.unshift(prospect);
+  saveCrm();
+  if (typeof renderCrmList === 'function') renderCrmList();
+  if (address) addCrmToMap(prospect);   // pipeline existant → géocodage + pin carte
+  card.added = true;
+  if (btn) { btn.textContent = '✓ Ajouté au CRM'; btn.classList.add('added'); btn.disabled = true; }
+  if (note) note.textContent = address ? 'Fiche créée — pin carte en cours de géocodage.' : 'Fiche créée (sans adresse : pas de pin).';
+  return { added: true };
+}
+
+function piaAddAll(groupId) {
+  let added = 0, dups = 0, blocked = 0;
+  Object.keys(_piaCards).forEach(id => {
+    const c = _piaCards[id];
+    if (c.groupId !== groupId || c.added) return;
+    const p = c.data;
+    if (!p.sector || !p.size) {
+      const fixBox = document.getElementById('pia-fix-' + id);
+      if (fixBox && fixBox.style.display === 'none') fixBox.style.display = 'block';
+      const note = document.getElementById('pia-add-note-' + id);
+      if (note) note.textContent = 'Données incomplètes — compléter avant ajout.';
+      blocked++; return;
+    }
+    const r = piaAddToCrm(id);
+    if (r && r.added) added++;
+    else if (r && r.dup) dups++;
+  });
+  alert(`Ajout terminé : ${added} prospect${added > 1 ? 's' : ''} ajouté${added > 1 ? 's' : ''} au CRM` +
+    (dups ? ` · ${dups} doublon(s) ignoré(s)` : '') +
+    (blocked ? ` · ${blocked} fiche(s) incomplète(s) à compléter (secteur/taille)` : '') + '.');
+}
+
 // ══════════════ IMPORT EXCEL / CSV → CRM (fiable) ══════════════
 let _xlsxLoading = null;
 function loadXLSX() {
@@ -5703,7 +6065,7 @@ function renderResults(data) {
 
 // ── TABS ──────────────────────────────────────────────────────────────
 function switchTab(tab) {
-  const allTabs = ['home','company','territory','map','crm','carte','outreach','pipeline','messaging','campaigns','fiches','samples'];
+  const allTabs = ['home','prospect-ia','map','crm','carte','outreach','pipeline','messaging','campaigns','fiches','samples'];
   allTabs.forEach(t => {
     const btn = document.getElementById('tab-'+t);
     const panel = document.getElementById('panel-'+t);
@@ -5719,8 +6081,6 @@ function switchTab(tab) {
   if (tab === 'outreach') initOutreach();
   if (tab === 'pipeline') initPipeline();
   if (tab === 'messaging') initMessaging();
-  if ((tab === 'company' || tab === 'territory') && typeof renderEngineSwitch === 'function') renderEngineSwitch();
-  if (tab === 'company' && typeof initCompanyGeo === 'function') initCompanyGeo();
   if (tab === 'carte' && typeof initCardTab === 'function') initCardTab();
 }
 
@@ -6912,7 +7272,7 @@ window.switchTab = function(tab) {
   if (tab === 'outreach') initOutreach();
   if (tab === 'pipeline') initPipeline();
   if (tab === 'messaging') initMessaging();
-  if (tab === 'company' || tab === 'territory') renderApiGauge();
+  if (tab === 'prospect-ia') { renderApiGauge(); if (typeof piaInit === 'function') piaInit(); }
 };
 
 // ─────────────────────────────────────────────────────────────────────
